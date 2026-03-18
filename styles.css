@@ -47,6 +47,7 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     width: 100%;
+    position: relative; /* Added for stability */
 }
 
 /* Typography & General */
@@ -105,11 +106,12 @@ a {
 .logo h1 {
     font-size: 1.5rem;
     font-weight: 800;
-    font-style: italic; /* Instagram typography feel */
+    font-style: italic;
     background: var(--primary-gradient);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    white-space: nowrap; /* Prevent logo from breaking */
 }
 
 .badge {
@@ -461,13 +463,15 @@ input:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
 }
 
 .table-responsive {
     overflow-x: auto;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -607,34 +611,38 @@ body.dark-mode tr:hover {
 @media (max-width: 768px) {
     .main-content-grid {
         grid-template-columns: 1fr;
-    }
-
-    .glass-card {
-        padding: 1rem;
+        gap: 1rem;
     }
 
     .dashboard-wrap {
         padding: 0.5rem;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     .app-header {
-        padding: 0.5rem 0.75rem;
+        padding: 0.5rem 1rem;
     }
 
     .logo h1 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
-    .header-actions {
-        gap: 0.5rem;
+    .header-actions span {
+        display: none; /* Hide 'Hello, User' text on small mobile to save space */
     }
 
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
+    }
+
+    .progress-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
     }
 
     .canvas-wrapper {
@@ -648,19 +656,31 @@ body.dark-mode tr:hover {
         grid-template-columns: 1fr;
     }
 
-    .chart-header {
+    .chart-header, 
+    .table-header {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .chart-filters {
+        width: 100%;
+        justify-content: space-between;
     }
 
     .filter-btn {
         flex: 1;
-        padding: 0.5rem 0.5rem;
+        padding: 0.4rem 0.25rem;
         font-size: 0.75rem;
     }
-    
-    .logo h1 {
-        font-size: 1.1rem;
+
+    .btn-small {
+        width: 100%; /* Make Export CSV button full width on tiny mobile */
+    }
+
+    .glass-card {
+        padding: 0.75rem;
+        border-radius: 12px;
     }
 }
 
