@@ -1,5 +1,6 @@
 # Modern Workout Tracker
 
+
 A modern, responsive, client-side only web application to track daily fitness. Data is stored on Google Sheets using a simple Google Apps Script as a REST API backend. It features multiple users support, interactive charts, data caching with localStorage, and CSV exports!
 
 ## 🚀 Features
