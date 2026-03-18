@@ -196,6 +196,9 @@ async function fetchData() {
 
 logForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const date = document.getElementById("logDate").value;
+    const time = document.getElementById("logTime").value;
+    const weight = parseFloat(document.getElementById("logWeight").value);
     const status = document.getElementById("logStatus").value;
     const type = status === "Done" ? document.getElementById("logType").value : "Skipped";
     const isCheat = document.getElementById("logCheat").checked;
