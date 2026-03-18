@@ -629,9 +629,11 @@ body.dark-mode tr:hover {
     }
 
     .app-header {
-        padding: 0.5rem;
-        justify-content: space-around;
-        gap: 0.25rem;
+        padding: 0.75rem;
+        flex-direction: column; /* Stack header elements */
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
     }
 
     .logo h1 {
@@ -640,11 +642,14 @@ body.dark-mode tr:hover {
     }
 
     .header-actions {
-        gap: 0.25rem;
+        width: 100%;
+        justify-content: center;
+        gap: 0.75rem;
     }
-    
+
     .header-actions span {
-        display: none;
+        display: block;
+        font-size: 0.9rem;
     }
 
     .stats-grid, .progress-grid {
