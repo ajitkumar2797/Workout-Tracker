@@ -102,6 +102,12 @@ function doGet(e) {
           d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
           obj[key] = d.toISOString().split('T')[0];
         } catch(err) { obj[key] = row[j]; }
+      } else if(key === "time") {
+        try {
+          var t = new Date(row[j]);
+          // Google Sheets often returns a date of 1899 for pure time values; we only care about the time part
+          obj[key] = Utilities.formatDate(t, Session.getScriptTimeZone(), "HH:mm");
+        } catch(err) { obj[key] = row[j]; }
       } else {
         obj[key] = row[j];
       }

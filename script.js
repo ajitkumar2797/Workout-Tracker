@@ -338,9 +338,9 @@ function renderTable() {
         tr.innerHTML = `
             <td>${row.date}</td>
             <td><span class="status-badge ${row.status === 'Done' ? 'done' : 'skipped'}">${row.status || 'Done'}</span></td>
-            <td>${row.type || "--"}</td>
+            <td>${row.status === 'Done' ? (row.type || "--") : "Skipped"}</td>
             <td>${row.weight}</td>
-            <td>${row.time || "--:--"}</td>
+            <td>${(row.time && row.time.length > 8) ? row.time.substring(11, 16) : (row.time || "--:--")}</td>
             <td>${row.cheatMeal}</td>
         `;
         historyBody.appendChild(tr);
