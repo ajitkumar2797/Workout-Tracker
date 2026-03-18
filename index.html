@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="light-mode">
+    <!-- Navigation / Header -->
+    <header class="app-header">
+        <div class="logo">
+            <h1>Workout<span class="highlight">Tracker</span></h1>
+        </div>
+        <div class="header-actions">
+            <span id="welcomeMessage" class="hidden">Hello, User!</span>
+            <button id="themeToggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
+            <button id="logoutBtn" class="btn btn-outline hidden">Logout</button>
+        </div>
+    </header>
+
+    <!-- Login Container -->
+    <div id="loginContainer" class="container glass-card active">
+        <div class="login-header">
+            <h2>Welcome Back</h2>
+            <p>Enter your credentials to continue</p>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username (e.g. user1)" required>
+            </div>
+            <div class="form-group">
+                <label for="pin">PIN</label>
+                <input type="password" id="pin" placeholder="Enter 4-digit PIN" required>
+            </div>
+            <button type="submit" class="btn btn-primary full-width">Login</button>
+            <p id="loginError" class="error-msg"></p>
+        </form>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <div id="dashboardContainer" class="dashboard-wrap hidden">
+        <!-- Dashboard Header & Stats -->
+        <section class="dashboard-top">
+            <div class="plan-info glass-card">
+                <h3>Plan Overview</h3>
+                <p>Started: <span id="planStartDate">--</span></p>
+                <div class="motivation-box" id="motivationMessage">
+                    Let's get started! Log your first workout.
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card glass-card">
+                    <h4>Current Streak</h4>
+                    <div class="stat-value"><span id="streakValue">0</span> <small>days</small></div>
+                </div>
+                <div class="stat-card glass-card">
+                    <h4>Completion</h4>
+                    <div class="stat-value"><span id="completionValue">0</span><small>%</small></div>
+                </div>
+                <div class="stat-card glass-card">
+                    <h4>Total Days</h4>
+                    <div class="stat-value"><span id="totalDaysValue">0</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="progress-section">
+            <div class="progress-grid">
+                <div class="progress-card glass-card">
+                    <h4>Starting Weight</h4>
+                    <div class="stat-value"><span id="startWeight">--</span> <small>kg</small></div>
+                </div>
+                <div class="progress-card glass-card">
+                    <h4>Current Weight</h4>
+                    <div class="stat-value"><span id="currWeight">--</span> <small>kg</small></div>
+                </div>
+                <div class="progress-card glass-card">
+                    <h4>Total Change</h4>
+                    <div class="stat-value"><span id="totalChange">--</span> <small>kg</small></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Area -->
+        <div class="main-content-grid">
+            <!-- Left Column: Input Form -->
+            <aside class="input-panel">
+                <div class="glass-card">
+                    <h2>Log Daily Data</h2>
+                    <form id="logForm">
+                        <div class="form-group">
+                            <label for="logDate">Date</label>
+                            <input type="date" id="logDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="logTime">Time</label>
+                            <input type="time" id="logTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="logWeight">Body Weight (kg)</label>
+                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 75.5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="logType">Workout Type</label>
+                            <select id="logType" required>
+                                <option value="Gym">Gym</option>
+                                <option value="Running">Running</option>
+                                <option value="Badminton">Badminton</option>
+                                <option value="Tennis">Tennis</option>
+                            </select>
+                        </div>
+
+                        <div class="toggle-group">
+                            <label>Cheat Meal</label>
+                            <div class="custom-toggle">
+                                <input type="checkbox" id="logCheat">
+                                <label for="logCheat" class="toggle-label" data-on="Yes" data-off="No"></label>
+                            </div>
+                        </div>
+
+                        <!-- Optional BMI Section -->
+                        <div class="bmi-section">
+                            <div class="toggle-group inline-toggle">
+                                <label for="showBmi">Calculate BMI?</label>
+                                <input type="checkbox" id="showBmi" class="simple-toggle">
+                            </div>
+                            <div id="bmiInputs" class="hidden">
+                                <div class="form-group mt-2">
+                                    <label for="logHeight">Height (cm)</label>
+                                    <input type="number" id="logHeight" placeholder="e.g. 175">
+                                </div>
+                                <div class="bmi-result mt-2" id="bmiResult"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary full-width mt-4" id="submitLogBtn">Save
+                            Entry</button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Right Column: Chart & History -->
+            <main class="data-panel">
+                <div class="glass-card chart-container">
+                    <div class="chart-header">
+                        <h2>Weight Progress</h2>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-filter="daily">Daily</button>
+                            <button class="filter-btn" data-filter="weekly">Weekly Avg</button>
+                            <button class="filter-btn" data-filter="monthly">Monthly</button>
+                        </div>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card table-container mt-4">
+                    <div class="table-header">
+                        <h2>Recent History</h2>
+                        <button id="exportCsvBtn" class="btn btn-outline btn-small">Export CSV</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight (kg)</th>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                    <th>Cheat Meal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Syncing...</p>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
