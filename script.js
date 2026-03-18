@@ -287,12 +287,12 @@ function updateStats() {
     document.getElementById("currWeight").textContent = currW;
     document.getElementById("totalChange").textContent = diff > 0 ? `+${diff}` : diff;
 
-    // Totals & Completion
-    const totalPossibleDays = [...new Set(currentData.map(d => d.date))].length;
-    const doneDaysCount = currentData.filter(d => d.status === "Done").length;
-    let completion = totalPossibleDays > 0 ? Math.round((doneDaysCount / totalPossibleDays) * 100) : 0;
+    // Consistency Analysis (how many of your logs are 'Done' vs 'Skipped')
+    const totalEntries = currentData.length;
+    const doneEntriesCount = currentData.filter(d => d.status === "Done").length;
+    let completion = totalEntries > 0 ? Math.round((doneEntriesCount / totalEntries) * 100) : 0;
 
-    document.getElementById("totalDaysValue").textContent = totalPossibleDays;
+    document.getElementById("totalDaysValue").textContent = totalEntries;
     document.getElementById("completionValue").textContent = completion;
 
     // Streak Calculation (only count days where status === "Done")
