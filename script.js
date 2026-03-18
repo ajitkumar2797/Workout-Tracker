@@ -326,6 +326,31 @@ function updateStats() {
     }
 }
 
+function formatTime12h(timeStr) {
+    if (!timeStr) return "--:--";
+    // If already formatted (contains AM/PM), return as is
+    if (timeStr.toLowerCase().includes("am") || timeStr.toLowerCase().includes("pm")) return timeStr;
+    
+    let hours, minutes;
+    if (timeStr.length > 8 && timeStr.includes("T")) {
+        // ISO string format
+        const tPart = timeStr.split("T")[1];
+        hours = parseInt(tPart.substring(0, 2));
+        minutes = tPart.substring(3, 5);
+    } else {
+        // HH:mm format
+        const parts = timeStr.split(":");
+        if (parts.length < 2) return timeStr;
+        hours = parseInt(parts[0]);
+        minutes = parts[1];
+    }
+    
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // conversion of 0 to 12
+    return `${hours}:${minutes} ${ampm}`;
+}
+
 function renderTable() {
     historyBody.innerHTML = "";
     // Display in reverse chronological order
@@ -340,7 +365,7 @@ function renderTable() {
             <td><span class="status-badge ${row.status === 'Done' ? 'done' : 'skipped'}">${row.status || 'Done'}</span></td>
             <td>${row.status === 'Done' ? (row.type || "--") : "Skipped"}</td>
             <td>${row.weight}</td>
-            <td>${(row.time && row.time.length > 8) ? row.time.substring(11, 16) : (row.time || "--:--")}</td>
+            <td>${formatTime12h(row.time)}</td>
             <td>${row.cheatMeal}</td>
         `;
         historyBody.appendChild(tr);

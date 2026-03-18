@@ -106,7 +106,7 @@ function doGet(e) {
         try {
           var t = new Date(row[j]);
           // Google Sheets often returns a date of 1899 for pure time values; we only care about the time part
-          obj[key] = Utilities.formatDate(t, Session.getScriptTimeZone(), "HH:mm");
+          obj[key] = Utilities.formatDate(t, Session.getScriptTimeZone(), "hh:mm a");
         } catch(err) { obj[key] = row[j]; }
       } else {
         obj[key] = row[j];
