@@ -24,24 +24,24 @@ const toast = document.getElementById("toast");
 const logForm = document.getElementById("logForm");
 const historyBody = document.getElementById("historyBody");
 
-// Set up modern Flatpickr Date & Time inputs
-flatpickr("#logDate", {
-    defaultDate: "today"
-});
-flatpickr("#logTime", {
-    enableTime: true,
-    noCalendar: true,
-    dateFormat: "H:i",
-    defaultDate: "now"
-});
+// Set native default date and time to today
+document.getElementById("logDate").valueAsDate = new Date();
+const now = new Date();
+document.getElementById("logTime").value = now.toTimeString().slice(0, 5);
 
 // App Theme Initialization
 window.applyTheme = function (themeObj) {
     if (!themeObj) return;
-    if (themeObj.PrimaryColor) document.documentElement.style.setProperty('--primary-color', themeObj.PrimaryColor);
-    if (themeObj.SecondaryColor) document.documentElement.style.setProperty('--secondary-color', themeObj.SecondaryColor);
-    if (themeObj.DangerColor) document.documentElement.style.setProperty('--danger-color', themeObj.DangerColor);
-    if (themeObj.BackgroundColor) document.documentElement.style.setProperty('--bg-color', themeObj.BackgroundColor);
+
+    // Using document.body to correctly override the CSS specificity rules between light/dark modes
+    if (themeObj.PrimaryColor) document.body.style.setProperty('--primary-color', themeObj.PrimaryColor);
+    if (themeObj.SecondaryColor) document.body.style.setProperty('--secondary-color', themeObj.SecondaryColor);
+    if (themeObj.DangerColor) document.body.style.setProperty('--danger-color', themeObj.DangerColor);
+
+    // Only apply explicit background color if NOT in dark mode, since dark mode has strict background requirements
+    if (themeObj.BackgroundColor && !document.body.classList.contains('dark-mode')) {
+        document.body.style.setProperty('--bg-color', themeObj.BackgroundColor);
+    }
 };
 const savedNetTheme = localStorage.getItem("workout_theme_colors");
 if (savedNetTheme) applyTheme(JSON.parse(savedNetTheme));
