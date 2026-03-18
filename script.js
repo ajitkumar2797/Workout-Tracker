@@ -24,10 +24,27 @@ const toast = document.getElementById("toast");
 const logForm = document.getElementById("logForm");
 const historyBody = document.getElementById("historyBody");
 
-// Set default date and time to today
-document.getElementById("logDate").valueAsDate = new Date();
-const now = new Date();
-document.getElementById("logTime").value = now.toTimeString().slice(0, 5);
+// Set up modern Flatpickr Date & Time inputs
+flatpickr("#logDate", {
+    defaultDate: "today"
+});
+flatpickr("#logTime", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    defaultDate: "now"
+});
+
+// App Theme Initialization
+window.applyTheme = function (themeObj) {
+    if (!themeObj) return;
+    if (themeObj.PrimaryColor) document.documentElement.style.setProperty('--primary-color', themeObj.PrimaryColor);
+    if (themeObj.SecondaryColor) document.documentElement.style.setProperty('--secondary-color', themeObj.SecondaryColor);
+    if (themeObj.DangerColor) document.documentElement.style.setProperty('--danger-color', themeObj.DangerColor);
+    if (themeObj.BackgroundColor) document.documentElement.style.setProperty('--bg-color', themeObj.BackgroundColor);
+};
+const savedNetTheme = localStorage.getItem("workout_theme_colors");
+if (savedNetTheme) applyTheme(JSON.parse(savedNetTheme));
 
 // -----------------------------------------------------
 // Theme Management
@@ -156,6 +173,12 @@ async function fetchData() {
                         sel.appendChild(opt);
                     });
                 }
+
+                // Process dynamic theme colors
+                if (json.theme) {
+                    localStorage.setItem("workout_theme_colors", JSON.stringify(json.theme));
+                    window.applyTheme(json.theme);
+                }
             } else {
                 throw new Error("Failed to fetch");
             }
@@ -177,7 +200,8 @@ logForm.addEventListener("submit", async (e) => {
     const time = document.getElementById("logTime").value;
     const weight = parseFloat(document.getElementById("logWeight").value);
     const type = document.getElementById("logType").value;
-    const cheat = document.getElementById("logCheat").checked ? "Yes" : "No";
+    const isCheat = document.getElementById("logCheat").checked;
+    const cheat = isCheat ? (document.getElementById("logCheatText").value.trim() || "Yes") : "No";
 
     const payload = {
         user: currentUser,
@@ -406,8 +430,12 @@ function renderChart(filterType) {
 }
 
 // -----------------------------------------------------
-// Optional Features: BMI & CSV Export
+// Optional Features
 // -----------------------------------------------------
+document.getElementById("logCheat").addEventListener("change", (e) => {
+    document.getElementById("cheatMealInputGroup").classList.toggle("hidden", !e.target.checked);
+});
+
 document.getElementById("showBmi").addEventListener("change", (e) => {
     document.getElementById("bmiInputs").classList.toggle("hidden", !e.target.checked);
 });

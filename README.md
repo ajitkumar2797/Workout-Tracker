@@ -51,19 +51,24 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // Setup dynamic Workout Types Settings
+  // Setup dynamic Workout Types & Themes Settings
   var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Settings");
   var workoutTypes = ["Gym", "Running", "Badminton", "Tennis"];
   if (!settingsSheet) {
     settingsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Settings");
-    settingsSheet.appendRow(["Workout Types"]);
-    workoutTypes.forEach(function(t) { settingsSheet.appendRow([t]); });
-  } else {
-    var sData = settingsSheet.getDataRange().getValues();
-    workoutTypes = [];
-    for(var i=1; i<sData.length; i++) {
-       if(sData[i][0]) workoutTypes.push(sData[i][0]);
-    }
+    settingsSheet.appendRow(["Workout Types", "Theme Property", "Theme Value"]);
+    settingsSheet.appendRow(["Gym", "PrimaryColor", "#e1306c"]);
+    settingsSheet.appendRow(["Running", "SecondaryColor", "#fbad50"]);
+    settingsSheet.appendRow(["Badminton", "DangerColor", "#ed4956"]);
+    settingsSheet.appendRow(["Tennis", "", ""]);
+  }
+  
+  var sData = settingsSheet.getDataRange().getValues();
+  workoutTypes = [];
+  var theme = {};
+  for(var i = 1; i < sData.length; i++) {
+     if(sData[i][0]) workoutTypes.push(sData[i][0]);
+     if(sData[i][1] && sData[i][2]) theme[sData[i][1]] = sData[i][2];
   }
 
   var user = e.parameter.user || "default";
@@ -107,7 +112,8 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({
     status: "success",
     data: result,
-    workoutTypes: workoutTypes
+    workoutTypes: workoutTypes,
+    theme: theme
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
