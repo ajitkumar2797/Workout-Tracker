@@ -92,12 +92,14 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1rem;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-wrap: wrap; /* Added for ultra-small screens */
+    gap: 0.5rem;
 }
 
 .logo h1 {
@@ -136,9 +138,9 @@ a {
 
 /* Login Container */
 #loginContainer {
-    width: 90%;
+    width: 95%;
     max-width: 400px;
-    margin: 10vh auto;
+    margin: 5vh auto;
     text-align: center;
 }
 
@@ -198,6 +200,7 @@ input:focus {
     justify-content: center;
     align-items: center;
     transition: transform 0.1s, background-color 0.2s, color 0.2s;
+    touch-action: manipulation;
 }
 
 .btn:active {
@@ -298,7 +301,7 @@ input:focus {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .stat-card h4,
@@ -470,7 +473,7 @@ input:focus {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 500px;
+    min-width: 100%; /* Changed from 500px to avoid overflow */
     text-align: left;
 }
 
@@ -606,24 +609,40 @@ body.dark-mode tr:hover {
         grid-template-columns: 1fr;
     }
 
+    .glass-card {
+        padding: 1rem;
+    }
+
     .dashboard-wrap {
-        padding: 0.75rem;
+        padding: 0.5rem;
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
     }
 
     .app-header {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+
+    .header-actions {
+        gap: 0.5rem;
     }
 
     .stats-grid {
         grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .canvas-wrapper {
+        height: 250px;
     }
 }
 
 @media (max-width: 480px) {
-
     .stats-grid,
     .progress-grid {
         grid-template-columns: 1fr;
@@ -636,6 +655,12 @@ body.dark-mode tr:hover {
 
     .filter-btn {
         flex: 1;
+        padding: 0.5rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .logo h1 {
+        font-size: 1.1rem;
     }
 }
 
