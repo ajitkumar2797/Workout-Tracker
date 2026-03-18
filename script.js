@@ -196,16 +196,14 @@ async function fetchData() {
 
 logForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const date = document.getElementById("logDate").value;
-    const time = document.getElementById("logTime").value;
-    const weight = parseFloat(document.getElementById("logWeight").value);
-    const type = document.getElementById("logType").value;
+    const status = document.getElementById("logStatus").value;
+    const type = status === "Done" ? document.getElementById("logType").value : "Skipped";
     const isCheat = document.getElementById("logCheat").checked;
     const cheat = isCheat ? (document.getElementById("logCheatText").value.trim() || "Yes") : "No";
 
     const payload = {
         user: currentUser,
-        date, time, weight, type, cheatMeal: cheat
+        date, time, weight, type, status, cheatMeal: cheat
     };
 
     showLoading(true);
@@ -287,21 +285,22 @@ function updateStats() {
     document.getElementById("totalChange").textContent = diff > 0 ? `+${diff}` : diff;
 
     // Totals & Completion
-    const uniqueDates = [...new Set(currentData.map(d => d.date))];
-    const totalDays = uniqueDates.length;
-    let completion = totalDays > 0 ? 100 : 0; // Since every logged dataset implies completion
+    const totalPossibleDays = [...new Set(currentData.map(d => d.date))].length;
+    const doneDaysCount = currentData.filter(d => d.status === "Done").length;
+    let completion = totalPossibleDays > 0 ? Math.round((doneDaysCount / totalPossibleDays) * 100) : 0;
 
-    document.getElementById("totalDaysValue").textContent = totalDays;
+    document.getElementById("totalDaysValue").textContent = totalPossibleDays;
     document.getElementById("completionValue").textContent = completion;
 
-    // Streak Calculation (unique consecutive days backward from latest log)
+    // Streak Calculation (only count days where status === "Done")
     let streak = 0;
-    if (uniqueDates.length > 0) {
-        uniqueDates.sort((a, b) => new Date(a) - new Date(b));
+    const doneDates = [...new Set(currentData.filter(d => d.status === "Done").map(d => d.date))];
+    if (doneDates.length > 0) {
+        doneDates.sort((a, b) => new Date(a) - new Date(b));
         streak = 1;
-        for (let i = uniqueDates.length - 1; i > 0; i--) {
-            const curr = new Date(uniqueDates[i]);
-            const prev = new Date(uniqueDates[i - 1]);
+        for (let i = doneDates.length - 1; i > 0; i--) {
+            const curr = new Date(doneDates[i]);
+            const prev = new Date(doneDates[i - 1]);
             const diffTime = Math.abs(curr - prev);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             if (diffDays === 1) streak++;
@@ -331,12 +330,14 @@ function renderTable() {
 
     displayData.forEach(row => {
         const tr = document.createElement("tr");
+        if (row.status === "Skipped") tr.classList.add("missed-workout");
 
         tr.innerHTML = `
             <td>${row.date}</td>
+            <td><span class="status-badge ${row.status === 'Done' ? 'done' : 'skipped'}">${row.status || 'Done'}</span></td>
+            <td>${row.type || "--"}</td>
             <td>${row.weight}</td>
             <td>${row.time || "--:--"}</td>
-            <td>${row.type || "Undefined"}</td>
             <td>${row.cheatMeal}</td>
         `;
         historyBody.appendChild(tr);
@@ -432,6 +433,10 @@ function renderChart(filterType) {
 // -----------------------------------------------------
 // Optional Features
 // -----------------------------------------------------
+document.getElementById("logStatus").addEventListener("change", (e) => {
+    document.getElementById("workoutDetailsGroup").classList.toggle("hidden", e.target.value === "Skipped");
+});
+
 document.getElementById("logCheat").addEventListener("change", (e) => {
     document.getElementById("cheatMealInputGroup").classList.toggle("hidden", !e.target.checked);
 });
@@ -466,9 +471,9 @@ function calculateBMI() {
 document.getElementById("exportCsvBtn").addEventListener("click", () => {
     if (currentData.length === 0) return showToast("No data to export", true);
 
-    let csvContent = "data:text/csv;charset=utf-8,Date,Time,Weight,Type,CheatMeal\n";
+    let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
     currentData.forEach(row => {
-        csvContent += `${row.date},${row.time || ""},${row.weight},${row.type || ""},${row.cheatMeal}\n`;
+        csvContent += `${row.date},${row.status || "Done"},${row.type || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);

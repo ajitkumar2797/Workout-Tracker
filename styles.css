@@ -1,19 +1,20 @@
 :root {
-    --primary-color: #6366f1;
-    --primary-hover: #4f46e5;
-    --secondary-color: #ec4899;
-    --bg-color: #f3f4f6;
-    --text-main: #111827;
-    --text-muted: #6b7280;
-    --card-bg: rgba(255, 255, 255, 0.85);
-    --border-color: rgba(255, 255, 255, 0.2);
-    --glass-blur: 12px;
-    --danger-color: #ef4444;
-    --danger-bg: #fee2e2;
-    --success-color: #10b981;
-    --success-bg: #d1fae5;
-    --toggle-bg: #e5e7eb;
-    --input-bg: rgba(255, 255, 255, 0.9);
+    --primary-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    --primary-color: #dc2743;
+    --primary-hover: #bc1888;
+    --secondary-color: #f09433;
+    --bg-color: #fafafa;
+    --text-main: #262626;
+    --text-muted: #8e8e8e;
+    --card-bg: #ffffff;
+    --border-color: #dbdbdb;
+    --glass-blur: 0px; /* Reduced for Instagram look */
+    --danger-color: #ed4956;
+    --danger-bg: #fff1f2;
+    --success-color: #0095f6; /* Instagram blue for success */
+    --success-bg: #e0f4ff;
+    --toggle-bg: #efefef;
+    --input-bg: #fafafa;
 }
 
 body.dark-mode {
@@ -87,18 +88,36 @@ a {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Header */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
+    padding: 1rem 1.5rem;
     background: var(--card-bg);
-    backdrop-filter: blur(var(--glass-blur));
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-style: italic; /* Instagram typography feel */
+    background: var(--primary-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.badge {
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    font-style: normal;
 }
 
 .header-actions {
@@ -186,12 +205,12 @@ input:focus {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background: var(--primary-gradient);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-hover);
+    opacity: 0.9;
 }
 
 .btn-outline {
@@ -224,9 +243,9 @@ input:focus {
 
 /* Dashboard Layout */
 .dashboard-wrap {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: auto;
+    padding: 1rem;
+    max-width: 100%;
+    margin: 0 auto;
     width: 100%;
 }
 
@@ -478,6 +497,24 @@ tr.missed-workout {
     background-color: var(--danger-bg);
 }
 
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-badge.done {
+    background: var(--success-bg);
+    color: var(--success-color);
+}
+
+.status-badge.skipped {
+    background: var(--danger-bg);
+    color: var(--danger-color);
+}
+
 tr.missed-workout td {
     color: var(--danger-color);
     font-weight: 500;
@@ -570,14 +607,14 @@ body.dark-mode tr:hover {
     }
 
     .dashboard-wrap {
-        padding: 1rem;
+        padding: 0.75rem;
         width: 100%;
-        max-width: 100vw;
+        max-width: 100%;
         overflow-x: hidden;
     }
 
     .app-header {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
 
     .stats-grid {

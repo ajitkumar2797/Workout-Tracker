@@ -76,7 +76,7 @@ function doGet(e) {
   
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(user);
-    sheet.appendRow(["Date", "Time", "Weight", "Type", "CheatMeal"]);
+    sheet.appendRow(["Date", "Status", "Workout", "Weight", "Time", "CheatMeal"]);
   }
 
   var data = sheet.getDataRange().getValues();
@@ -130,7 +130,7 @@ function doPost(e) {
   
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(user);
-    sheet.appendRow(["Date", "Time", "Weight", "Type", "CheatMeal"]);
+    sheet.appendRow(["Date", "Status", "Workout", "Weight", "Time", "CheatMeal"]);
   }
   
   // Find if date already exists and overwrite, or append
@@ -142,17 +142,18 @@ function doPost(e) {
     var rowDate = d.toISOString().split('T')[0];
     
     // Check Date and Time to overwrite, else append
-    if(rowDate === jsonParams.date && String(data[i][1]) === String(jsonParams.time)) {
-      sheet.getRange(i+1, 3).setValue(jsonParams.weight);
-      sheet.getRange(i+1, 4).setValue(jsonParams.type);
-      sheet.getRange(i+1, 5).setValue(jsonParams.cheatMeal);
+    if(rowDate === jsonParams.date && String(data[i][4]) === String(jsonParams.time)) {
+      sheet.getRange(i+1, 2).setValue(jsonParams.status || "Done");
+      sheet.getRange(i+1, 3).setValue(jsonParams.type);
+      sheet.getRange(i+1, 4).setValue(jsonParams.weight);
+      sheet.getRange(i+1, 6).setValue(jsonParams.cheatMeal);
       updated = true;
       break;
     }
   }
   
   if(!updated) {
-    sheet.appendRow([jsonParams.date, jsonParams.time, jsonParams.weight, jsonParams.type, jsonParams.cheatMeal]);
+    sheet.appendRow([jsonParams.date, jsonParams.status || "Done", jsonParams.type, jsonParams.weight, jsonParams.time, jsonParams.cheatMeal]);
   }
   
   return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);

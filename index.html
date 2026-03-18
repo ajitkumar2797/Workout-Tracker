@@ -16,7 +16,7 @@
     <!-- Navigation / Header -->
     <header class="app-header">
         <div class="logo">
-            <h1>Workout<span class="highlight">Tracker</span></h1>
+            <h1>Workout<span class="highlight">Tracker</span> <span class="badge">PRO</span></h1>
         </div>
         <div class="header-actions">
             <span id="welcomeMessage" class="hidden">Hello, User!</span>
@@ -111,13 +111,23 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="logType">Workout Type</label>
-                            <select id="logType" required>
-                                <option value="Gym">Gym</option>
-                                <option value="Running">Running</option>
-                                <option value="Badminton">Badminton</option>
-                                <option value="Tennis">Tennis</option>
+                            <label for="logStatus">Workout Status</label>
+                            <select id="logStatus" required>
+                                <option value="Done">Completed ✅</option>
+                                <option value="Skipped">Skipped ❌</option>
                             </select>
+                        </div>
+
+                        <div id="workoutDetailsGroup">
+                            <div class="form-group">
+                                <label for="logType">Workout Type</label>
+                                <select id="logType">
+                                    <option value="Gym">Gym</option>
+                                    <option value="Running">Running</option>
+                                    <option value="Badminton">Badminton</option>
+                                    <option value="Tennis">Tennis</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="toggle-group">
@@ -178,9 +188,10 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Workout</th>
                                     <th>Weight (kg)</th>
                                     <th>Time</th>
-                                    <th>Type</th>
                                     <th>Cheat Meal</th>
                                 </tr>
                             </thead>
