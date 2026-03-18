@@ -358,12 +358,15 @@ function renderTable() {
 
     displayData.forEach(row => {
         const tr = document.createElement("tr");
-        if (row.status === "Skipped") tr.classList.add("missed-workout");
+        const status = (row.status || "Done").toLowerCase();
+        if (status === "skipped") tr.classList.add("missed-workout");
+
+        const displayStatus = (row.status || "Done").toUpperCase();
 
         tr.innerHTML = `
             <td>${row.date}</td>
-            <td><span class="status-badge ${row.status === 'Done' ? 'done' : 'skipped'}">${row.status || 'Done'}</span></td>
-            <td>${row.status === 'Done' ? (row.type || "--") : "Skipped"}</td>
+            <td><span class="status-badge ${status === 'done' ? 'done' : 'skipped'}">${displayStatus}</span></td>
+            <td>${status === 'done' ? (row.type || row.workout || "--") : "Skipped"}</td>
             <td>${row.weight}</td>
             <td>${formatTime12h(row.time)}</td>
             <td>${row.cheatMeal}</td>

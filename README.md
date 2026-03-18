@@ -112,6 +112,8 @@ function doGet(e) {
         obj[key] = row[j];
       }
     }
+    // Maintain alignment with JS property names
+    if (obj.workout && !obj.type) obj.type = obj.workout;
     result.push(obj);
   }
 
