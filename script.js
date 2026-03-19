@@ -353,8 +353,17 @@ function formatTime12h(timeStr) {
 
 function renderTable() {
     historyBody.innerHTML = "";
-    // Display in reverse chronological order
-    const displayData = [...currentData].reverse();
+    
+    // Last 15 Days filter:
+    const now = new Date();
+    now.setHours(23, 59, 59, 999); // Ceiling for today
+    const threshold = new Date(now);
+    threshold.setDate(now.getDate() - 15);
+    
+    // Sort reverse chronological & Filter for UI view (Last 15 days ONLY)
+    const displayData = currentData
+        .filter(d => new Date(d.date) >= threshold)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     displayData.forEach(row => {
         const tr = document.createElement("tr");
@@ -502,9 +511,22 @@ function calculateBMI() {
 document.getElementById("exportCsvBtn").addEventListener("click", () => {
     if (currentData.length === 0) return showToast("No data to export", true);
 
+    const range = document.getElementById("exportRange").value;
+    let exportData = [...currentData];
+
+    if (range !== "all") {
+        const thresholdDays = parseInt(range);
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() - thresholdDays);
+        thresholdDate.setHours(0, 0, 0, 0);
+        exportData = currentData.filter(d => new Date(d.date) >= thresholdDate);
+    }
+
+    if (exportData.length === 0) return showToast("No data for chosen period", true);
+
     let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
-    currentData.forEach(row => {
-        csvContent += `${row.date},${row.status || "Done"},${row.type || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
+    exportData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(row => {
+        csvContent += `${row.date},${row.status || "Done"},${row.type || row.workout || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
