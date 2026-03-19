@@ -353,23 +353,8 @@ function formatTime12h(timeStr) {
 
 function renderTable() {
     historyBody.innerHTML = "";
-    
-    // Get range from UI (Default 7 days)
-    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "7";
-    
-    // Calculate threshold
-    const now = new Date();
-    now.setHours(23, 59, 59, 999);
-    
-    let filteredData = [...currentData];
-    if (range !== "all") {
-        const threshold = new Date(now);
-        threshold.setDate(now.getDate() - parseInt(range));
-        filteredData = currentData.filter(d => new Date(d.date) >= threshold);
-    }
-    
-    // Sort reverse chronological & Filter for UI view
-    const displayData = filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Display in reverse chronological order
+    const displayData = [...currentData].reverse();
 
     displayData.forEach(row => {
         const tr = document.createElement("tr");
@@ -514,29 +499,12 @@ function calculateBMI() {
     }
 }
 
-document.getElementById("historyRange").addEventListener("change", () => {
-    renderTable();
-});
-
 document.getElementById("exportCsvBtn").addEventListener("click", () => {
     if (currentData.length === 0) return showToast("No data to export", true);
 
-    const range = document.getElementById("historyRange").value;
-    let exportData = [...currentData];
-
-    if (range !== "all") {
-        const thresholdDays = parseInt(range);
-        const thresholdDate = new Date();
-        thresholdDate.setDate(thresholdDate.getDate() - thresholdDays);
-        thresholdDate.setHours(0, 0, 0, 0);
-        exportData = currentData.filter(d => new Date(d.date) >= thresholdDate);
-    }
-
-    if (exportData.length === 0) return showToast("No records for this range", true);
-
     let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
-    exportData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(row => {
-        csvContent += `${row.date},${row.status || "Done"},${row.type || row.workout || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
+    currentData.forEach(row => {
+        csvContent += `${row.date},${row.status || "Done"},${row.type || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
