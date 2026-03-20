@@ -33,22 +33,31 @@ function doGet(e) {
     var credSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Credentials");
     if (!credSheet) {
       credSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Credentials");
-      credSheet.appendRow(["Username", "PIN"]);
-      credSheet.appendRow(["Riddhi", "Riddhi2026"]);
-      credSheet.appendRow(["Ajit", "Ajit2026"]);
+      credSheet.appendRow(["Username", "PIN", "Height", "Age", "Gender"]);
+      credSheet.appendRow(["Riddhi", "Riddhi2026", "165", "28", "Female"]);
+      credSheet.appendRow(["Ajit", "Ajit2026", "175", "30", "Male"]);
     }
     var cData = credSheet.getDataRange().getValues();
     var valid = false;
     var realUser = "";
+    var profile = { height: "--", age: "--", gender: "--" };
     
     for (var i = 1; i < cData.length; i++) {
       if (String(cData[i][0]).toLowerCase() === String(e.parameter.user).toLowerCase() && String(cData[i][1]) === String(e.parameter.pin)) {
         valid = true;
         realUser = String(cData[i][0]);
+        profile.height = cData[i][2] || "--";
+        profile.age = cData[i][3] || "--";
+        profile.gender = cData[i][4] || "--";
         break;
       }
     }
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", valid: valid, realUser: realUser }))
+    return ContentService.createTextOutput(JSON.stringify({ 
+        status: "success", 
+        valid: valid, 
+        realUser: realUser,
+        profile: profile
+      }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 

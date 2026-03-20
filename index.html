@@ -19,7 +19,7 @@
             <h1>Workout<span class="highlight">Tracker</span> <span class="badge">PRO</span></h1>
         </div>
         <div class="header-actions">
-            <span id="welcomeMessage" class="hidden">Hello, User!</span>
+            <span id="welcomeMessage" class="hidden">Welcome Back!</span>
             <button id="themeToggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
             <button id="logoutBtn" class="btn btn-outline hidden">Logout</button>
         </div>
@@ -75,6 +75,21 @@
 
         <section class="progress-section">
             <div class="progress-grid">
+                <!-- User Profile Stats (Static) -->
+                <div class="progress-card glass-card">
+                    <h4>Height</h4>
+                    <div class="stat-value"><span id="profileHeight">--</span> <small>cm</small></div>
+                </div>
+                <div class="progress-card glass-card">
+                    <h4>Age</h4>
+                    <div class="stat-value"><span id="profileAge">--</span> <small>y/o</small></div>
+                </div>
+                <div class="progress-card glass-card">
+                    <h4>Gender</h4>
+                    <div class="stat-value"><span id="profileGender">--</span></div>
+                </div>
+                
+                <!-- Weight Progress Stats (Dynamic from logs) -->
                 <div class="progress-card glass-card">
                     <h4>Starting Weight</h4>
                     <div class="stat-value"><span id="startWeight">--</span> <small>kg</small></div>
@@ -167,32 +182,36 @@
                 <div class="glass-card chart-container">
                     <div class="chart-header">
                         <h2>Weight Progress</h2>
-                        <div class="chart-filters">
-                            <button class="filter-btn active" data-filter="daily">Daily</button>
-                            <button class="filter-btn" data-filter="weekly">Weekly Avg</button>
-                            <button class="filter-btn" data-filter="monthly">Monthly</button>
+                        <div class="history-controls">
+                            <select id="historyRange" class="history-range-select">
+                                <option value="7">Last 7 Days</option>
+                                <option value="15">Last 15 Days</option>
+                                <option value="30">Last Month</option>
+                                <option value="90">Last 3 Months</option>
+                                <option value="180">Last 6 Months</option>
+                                <option value="all">Full History</option>
+                            </select>
                         </div>
                     </div>
                     <div class="canvas-wrapper">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
+                
+                <!-- Workout Stats Chart -->
+                <div class="glass-card chart-container mt-4">
+                    <div class="chart-header">
+                        <h2>Workout Distribution</h2>
+                    </div>
+                    <div class="canvas-wrapper doughnut-wrapper">
+                        <canvas id="workoutStatsChart"></canvas>
+                    </div>
+                </div>
 
                 <div class="glass-card table-container mt-4">
                     <div class="table-header">
                         <h2>Recent History</h2>
-                        <div class="history-controls">
-                            <label for="historyRange">Range:</label>
-                            <select id="historyRange" class="history-range-select">
-                                <option value="7">Last 7 Days</option>
-                                <option value="15">Last 15 Days</option>
-                                <option value="30">Last 1 Month</option>
-                                <option value="90">Last 3 Months</option>
-                                <option value="180">Last 6 Months</option>
-                                <option value="all">Full History</option>
-                            </select>
-                            <button id="exportCsvBtn" class="btn btn-outline btn-small" title="Export current view to CSV">Export CSV</button>
-                        </div>
+                        <button id="exportCsvBtn" class="btn btn-outline btn-small" title="Export current view to CSV">Export CSV</button>
                     </div>
                     <div class="table-responsive">
                         <table id="historyTable">
@@ -224,6 +243,7 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
+
 
     <script src="script.js"></script>
 </body>

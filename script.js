@@ -10,6 +10,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyOzzGfT37V1oRmhPoDbQtb
 let currentUser = localStorage.getItem("workout_user") || null;
 let currentData = [];
 let chartInstance = null;
+let workoutStatsChartInstance = null;
 
 // DOM Elements
 const body = document.body;
@@ -101,6 +102,12 @@ loginForm.addEventListener("submit", async (e) => {
             const realUser = json.realUser;
             currentUser = realUser;
             localStorage.setItem("workout_user", realUser);
+            
+            // Save profile details if returned from backend
+            if (json.profile) {
+                localStorage.setItem(`profile_${realUser}`, JSON.stringify(json.profile));
+            }
+            
             showDashboard(realUser);
         } else {
             err.textContent = "Invalid username or PIN.";
@@ -108,7 +115,8 @@ loginForm.addEventListener("submit", async (e) => {
     } catch (error) {
         err.textContent = "Network error. Could not verify.";
     } finally {
-        document.querySelector("button[type='submit']").disabled = false;
+        const subBtn = document.querySelector("button[type='submit']");
+        if (subBtn) subBtn.disabled = false;
     }
 });
 
@@ -119,7 +127,8 @@ logoutBtn.addEventListener("click", () => {
     loginContainer.classList.remove("hidden");
     dashboardContainer.classList.add("hidden");
     logoutBtn.classList.add("hidden");
-    welcomeMessage.classList.add("hidden");
+    const welcome = document.getElementById("welcomeMessage");
+    if (welcome) welcome.classList.add("hidden");
     document.getElementById("username").value = "";
     document.getElementById("pin").value = "";
 });
@@ -128,8 +137,16 @@ function showDashboard(user) {
     loginContainer.classList.add("hidden");
     dashboardContainer.classList.remove("hidden");
     logoutBtn.classList.remove("hidden");
-    welcomeMessage.textContent = `Hello, ${user}!`;
-    welcomeMessage.classList.remove("hidden");
+    
+    // Show personalized welcome
+    const welcome = document.getElementById("welcomeMessage");
+    if (welcome) {
+        welcome.textContent = `Hello, ${user}!`;
+        welcome.classList.remove("hidden");
+    }
+    
+    // Refresh display cards with latest profile data
+    updateProfileStats();
     fetchData();
 }
 
@@ -252,12 +269,44 @@ logForm.addEventListener("submit", async (e) => {
 // -----------------------------------------------------
 
 function updateUI() {
-    // Sort data chronologically 
-    currentData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Precise Sort: Date + Time ensuring the last entry is the absolute latest
+    currentData.sort((a, b) => {
+        const dateTimeA = new Date(`${a.date}T${a.time || '00:00'}`);
+        const dateTimeB = new Date(`${b.date}T${b.time || '00:00'}`);
+        return dateTimeA - dateTimeB;
+    });
 
-    renderTable();
     updateStats();
-    renderChart("daily");
+    renderTable();
+    renderChart();
+    renderWorkoutStatsChart();
+}
+
+/**
+ * Shared filtering logic to keep Table and Charts in sync
+ */
+function getFilteredData() {
+    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "7";
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    
+    if (range === "all") return [...currentData];
+
+    const threshold = new Date(todayStart);
+    if (range === "7") threshold.setDate(todayStart.getDate() - 7);
+    else if (range === "15") threshold.setDate(todayStart.getDate() - 15);
+    else if (range === "30") threshold.setMonth(todayStart.getMonth() - 1);
+    else if (range === "90") threshold.setMonth(todayStart.getMonth() - 3);
+    else if (range === "180") threshold.setMonth(todayStart.getMonth() - 6);
+    threshold.setHours(0, 0, 0, 0);
+
+    return currentData.filter(d => {
+        if (!d.date) return false;
+        const [y, m, day] = d.date.split("-").map(Number);
+        const entryDate = new Date(y, m - 1, day);
+        return entryDate >= threshold && entryDate <= todayEnd;
+    });
 }
 
 function updateStats() {
@@ -285,7 +334,16 @@ function updateStats() {
 
     document.getElementById("startWeight").textContent = startW;
     document.getElementById("currWeight").textContent = currW;
-    document.getElementById("totalChange").textContent = diff > 0 ? `+${diff}` : diff;
+    const tcEl = document.getElementById("totalChange");
+    tcEl.textContent = diff > 0 ? `+${diff}` : diff;
+    
+    // Clear old classes
+    tcEl.classList.remove("loss-value", "gain-value");
+    if (diff < 0) {
+        tcEl.classList.add("loss-value");
+    } else if (diff > 0) {
+        tcEl.classList.add("gain-value");
+    }
 
     // Consistency Analysis (how many of your logs are 'Done' vs 'Skipped')
     const totalEntries = currentData.length;
@@ -354,39 +412,14 @@ function formatTime12h(timeStr) {
 function renderTable() {
     historyBody.innerHTML = "";
     
-    // Range preference from UI (Default 7 days)
-    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "7";
-    
-    // Get comparison date boundaries
-    const now = new Date();
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    
-    let filteredData = [...currentData];
-    
-    if (range !== "all") {
-        const threshold = new Date(todayStart);
-        if (range === "7") threshold.setDate(todayStart.getDate() - 7);
-        else if (range === "15") threshold.setDate(todayStart.getDate() - 15);
-        else if (range === "30") threshold.setMonth(todayStart.getMonth() - 1);
-        else if (range === "90") threshold.setMonth(todayStart.getMonth() - 3);
-        else if (range === "180") threshold.setMonth(todayStart.getMonth() - 6);
-        
-        threshold.setHours(0, 0, 0, 0);
-        
-        filteredData = currentData.filter(d => {
-            if (!d.date) return false;
-            // Robust parsing for YYYY-MM-DD
-            const [y, m, day] = d.date.split("-").map(Number);
-            const entryDate = new Date(y, m - 1, day);
-            
-            // Only show entries between [threshold, todayEnd]
-            return entryDate >= threshold && entryDate <= todayEnd;
-        });
-    }
+    const filteredData = getFilteredData();
 
-    // Sort: Newest first
-    const displayData = filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
+    // Sort: Newest first (Precise Date + Time)
+    const displayData = filteredData.sort((a,b) => {
+        const da = new Date(`${a.date}T${a.time || '00:00'}`);
+        const db = new Date(`${b.date}T${b.time || '00:00'}`);
+        return db - da;
+    });
 
     if (displayData.length === 0) {
         historyBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No records found for selected period</td></tr>`;
@@ -415,7 +448,87 @@ function renderTable() {
 // Add history filter listener
 const historyRangeSelect = document.getElementById('historyRange');
 if (historyRangeSelect) {
-    historyRangeSelect.addEventListener('change', renderTable);
+    historyRangeSelect.addEventListener('change', () => {
+        renderTable();
+        renderWorkoutStatsChart();
+        renderChart(); // Global sync
+    });
+}
+
+function renderWorkoutStatsChart() {
+    const canvas = document.getElementById("workoutStatsChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    if (workoutStatsChartInstance) {
+        workoutStatsChartInstance.destroy();
+    }
+
+    const filteredData = getFilteredData();
+    if (filteredData.length === 0) return;
+
+    // Aggregate status and types
+    const stats = {};
+    filteredData.forEach(row => {
+        const status = (row.status || "Done").toLowerCase();
+        if (status === "skipped") {
+            stats["Skipped"] = (stats["Skipped"] || 0) + 1;
+        } else {
+            const type = row.type || row.workout || "Other";
+            stats[type] = (stats[type] || 0) + 1;
+        }
+    });
+
+    const labels = Object.keys(stats);
+    const data = Object.values(stats);
+
+    // Original Instagram-Inspired Palette
+    const colorMap = {
+        'Gym': '#e1306c',
+        'Running': '#fbad50',
+        'Swimming': '#405de6',
+        'Badminton': '#833ab4',
+        'Tennis': '#58C322',
+        'Skipped': '#ed4956',
+        'Other': '#8e8e8e'
+    };
+
+    const backgroundColors = labels.map(label => colorMap[label] || `hsl(${Math.random() * 360}, 70%, 60%)`);
+
+    workoutStatsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.body).getPropertyValue('--text-main').trim(),
+                        padding: 15,
+                        font: { size: 12, weight: '500' },
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 14 }
+                }
+            }
+        }
+    });
 }
 
 // -----------------------------------------------------
@@ -431,45 +544,19 @@ filterBtns.forEach(btn => {
     });
 });
 
-function renderChart(filterType) {
+function renderChart() {
     const ctx = document.getElementById("weightChart").getContext("2d");
 
     if (chartInstance) {
         chartInstance.destroy();
     }
 
-    if (currentData.length === 0) return;
+    const filteredData = getFilteredData();
+    if (filteredData.length === 0) return;
 
-    let labels = [];
-    let dataPoints = [];
-
-    if (filterType === "daily") {
-        labels = currentData.map(d => d.date);
-        dataPoints = currentData.map(d => d.weight);
-    } else {
-        // Grouping logic for Weekly / Monthly
-        const grouped = {};
-        currentData.forEach(d => {
-            const dateObj = new Date(d.date);
-            let key;
-            if (filterType === "weekly") {
-                // ISO week approximation for chart grouping
-                const year = dateObj.getFullYear();
-                const week = Math.ceil((dateObj.getDate() - dateObj.getDay() + 1) / 7);
-                key = `${year}-W${week}`;
-            } else {
-                key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-            }
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(d.weight);
-        });
-
-        labels = Object.keys(grouped);
-        dataPoints = labels.map(k => {
-            const sum = grouped[k].reduce((a, b) => a + b, 0);
-            return (sum / grouped[k].length).toFixed(1);
-        });
-    }
+    // Use current range from filtered data
+    const labels = filteredData.map(d => d.date);
+    const dataPoints = filteredData.map(d => d.weight);
 
     chartInstance = new Chart(ctx, {
         type: 'line',
@@ -542,35 +629,40 @@ function calculateBMI() {
     }
 }
 
-document.getElementById("exportCsvBtn").addEventListener("click", () => {
-    if (currentData.length === 0) return showToast("No data to export", true);
-
-    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "all";
-    const now = new Date();
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+// -----------------------------------------------------
+// Profile Management
+// -----------------------------------------------------
+function updateProfileStats() {
+    if (!currentUser) return;
+    const profile = JSON.parse(localStorage.getItem(`profile_${currentUser}`)) || { 
+        height: "--", age: "--", gender: "--" 
+    };
     
-    let exportData = [...currentData];
-    if (range !== "all") {
-        const threshold = new Date(todayStart);
-        if (range === "7") threshold.setDate(todayStart.getDate() - 7);
-        else if (range === "15") threshold.setDate(todayStart.getDate() - 15);
-        else if (range === "30") threshold.setMonth(todayStart.getMonth() - 1);
-        else if (range === "90") threshold.setMonth(todayStart.getMonth() - 3);
-        else if (range === "180") threshold.setMonth(todayStart.getMonth() - 6);
-        threshold.setHours(0, 0, 0, 0);
+    const hEl = document.getElementById("profileHeight");
+    const aEl = document.getElementById("profileAge");
+    const gEl = document.getElementById("profileGender");
 
-        exportData = currentData.filter(d => {
-            if (!d.date) return false;
-            const [y, m, day] = d.date.split("-").map(Number);
-            const entryDate = new Date(y, m - 1, day);
-            return entryDate >= threshold && entryDate <= todayEnd;
-        });
+    if (hEl) hEl.textContent = profile.height || "--";
+    if (aEl) aEl.textContent = profile.age || "--";
+    
+    // Format Gender as M/F (first character uppercase)
+    if (gEl) {
+        let genderVal = (profile.gender || "--").trim();
+        gEl.textContent = genderVal !== "--" ? genderVal.at(0).toUpperCase() : "--";
     }
+}
 
-    if (exportData.length === 0) return showToast("No records to export in this range", true);
+// Ensure profile displays on load if logged in
+if (currentUser) {
+    updateProfileStats();
+}
+
+document.getElementById("exportCsvBtn").addEventListener("click", () => {
+    const exportData = getFilteredData();
+    if (exportData.length === 0) return showToast("No data to export", true);
 
     let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
+    // Sort chronological for export
     exportData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(row => {
         csvContent += `${row.date},${row.status || "Done"},${row.type || row.workout || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
