@@ -377,25 +377,26 @@ function updateStats() {
         tcEl.classList.add("gain-value");
     }
 
-    // Consistency Analysis (how many of your logs are 'Done' vs 'Skipped')
+    // Consistency Analysis (Done and Rest days are both positive progress)
     const totalEntries = currentData.length;
-    const doneEntriesCount = currentData.filter(d => d.status === "Done").length;
-    let completion = totalEntries > 0 ? Math.round((doneEntriesCount / totalEntries) * 100) : 0;
+    const consistentEntriesCount = currentData.filter(d => d.status === "Done" || d.status === "Rest").length;
+    let completion = totalEntries > 0 ? Math.round((consistentEntriesCount / totalEntries) * 100) : 0;
 
     document.getElementById("totalDaysValue").textContent = totalEntries;
     document.getElementById("completionValue").textContent = completion;
 
-    // Streak Calculation (only count days where status === "Done")
+    // Streak Calculation (includes both Workout days and Rest days)
     let streak = 0;
-    const doneDates = [...new Set(currentData.filter(d => d.status === "Done").map(d => d.date))];
-    if (doneDates.length > 0) {
-        doneDates.sort((a, b) => new Date(a) - new Date(b));
+    const consistentDates = [...new Set(currentData.filter(d => d.status === "Done" || d.status === "Rest").map(d => d.date))];
+    if (consistentDates.length > 0) {
+        consistentDates.sort((a, b) => new Date(a) - new Date(b));
         streak = 1;
-        for (let i = doneDates.length - 1; i > 0; i--) {
-            const curr = new Date(doneDates[i]);
-            const prev = new Date(doneDates[i - 1]);
+        for (let i = consistentDates.length - 1; i > 0; i--) {
+            const curr = new Date(consistentDates[i]);
+            const prev = new Date(consistentDates[i - 1]);
             const diffTime = Math.abs(curr - prev);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            // A streak continues if there is exactly 1 day difference between logs
             if (diffDays === 1) streak++;
             else break;
         }
