@@ -11,6 +11,8 @@ let currentUser = localStorage.getItem("workout_user") || null;
 let currentData = [];
 let chartInstance = null;
 let workoutStatsChartInstance = null;
+let inactivityTimeout;
+const TIMEOUT_DURATION = 60000; // 60 Seconds
 
 // DOM Elements
 const body = document.body;
@@ -102,12 +104,12 @@ loginForm.addEventListener("submit", async (e) => {
             const realUser = json.realUser;
             currentUser = realUser;
             localStorage.setItem("workout_user", realUser);
-            
+
             // Save profile details if returned from backend
             if (json.profile) {
                 localStorage.setItem(`profile_${realUser}`, JSON.stringify(json.profile));
             }
-            
+
             showDashboard(realUser);
         } else {
             err.textContent = "Invalid username or PIN.";
@@ -120,7 +122,9 @@ loginForm.addEventListener("submit", async (e) => {
     }
 });
 
-logoutBtn.addEventListener("click", () => {
+logoutBtn.addEventListener("click", performLogout);
+
+function performLogout() {
     currentUser = null;
     localStorage.removeItem("workout_user");
     currentData = [];
@@ -131,20 +135,48 @@ logoutBtn.addEventListener("click", () => {
     if (welcome) welcome.classList.add("hidden");
     document.getElementById("username").value = "";
     document.getElementById("pin").value = "";
-});
+
+    // Clear timeout and listeners
+    clearTimeout(inactivityTimeout);
+    removeActivityListeners();
+    showToast("Session timed out due to Inactivity", true);
+}
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    if (currentUser) {
+        inactivityTimeout = setTimeout(performLogout, TIMEOUT_DURATION);
+    }
+}
+
+function setupActivityListeners() {
+    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(name => {
+        document.addEventListener(name, resetInactivityTimer, true);
+    });
+}
+
+function removeActivityListeners() {
+    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(name => {
+        document.removeEventListener(name, resetInactivityTimer, true);
+    });
+}
 
 function showDashboard(user) {
     loginContainer.classList.add("hidden");
     dashboardContainer.classList.remove("hidden");
     logoutBtn.classList.remove("hidden");
-    
+
     // Show personalized welcome
     const welcome = document.getElementById("welcomeMessage");
     if (welcome) {
         welcome.textContent = `Hello, ${user}!`;
         welcome.classList.remove("hidden");
     }
-    
+
+    // Start Inactivity Guardian
+    setupActivityListeners();
+    resetInactivityTimer();
+
     // Refresh display cards with latest profile data
     updateProfileStats();
     fetchData();
@@ -290,7 +322,7 @@ function getFilteredData() {
     const now = new Date();
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    
+
     if (range === "all") return [...currentData];
 
     const threshold = new Date(todayStart);
@@ -336,7 +368,7 @@ function updateStats() {
     document.getElementById("currWeight").textContent = currW;
     const tcEl = document.getElementById("totalChange");
     tcEl.textContent = diff > 0 ? `+${diff}` : diff;
-    
+
     // Clear old classes
     tcEl.classList.remove("loss-value", "gain-value");
     if (diff < 0) {
@@ -388,7 +420,7 @@ function formatTime12h(timeStr) {
     if (!timeStr) return "--:--";
     // If already formatted (contains AM/PM), return as is
     if (timeStr.toLowerCase().includes("am") || timeStr.toLowerCase().includes("pm")) return timeStr;
-    
+
     let hours, minutes;
     if (timeStr.length > 8 && timeStr.includes("T")) {
         // ISO string format
@@ -402,7 +434,7 @@ function formatTime12h(timeStr) {
         hours = parseInt(parts[0]);
         minutes = parts[1];
     }
-    
+
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12; // conversion of 0 to 12
@@ -411,11 +443,11 @@ function formatTime12h(timeStr) {
 
 function renderTable() {
     historyBody.innerHTML = "";
-    
+
     const filteredData = getFilteredData();
 
     // Sort: Newest first (Precise Date + Time)
-    const displayData = filteredData.sort((a,b) => {
+    const displayData = filteredData.sort((a, b) => {
         const da = new Date(`${a.date}T${a.time || '00:00'}`);
         const db = new Date(`${b.date}T${b.time || '00:00'}`);
         return db - da;
@@ -634,17 +666,17 @@ function calculateBMI() {
 // -----------------------------------------------------
 function updateProfileStats() {
     if (!currentUser) return;
-    const profile = JSON.parse(localStorage.getItem(`profile_${currentUser}`)) || { 
-        height: "--", age: "--", gender: "--" 
+    const profile = JSON.parse(localStorage.getItem(`profile_${currentUser}`)) || {
+        height: "--", age: "--", gender: "--"
     };
-    
+
     const hEl = document.getElementById("profileHeight");
     const aEl = document.getElementById("profileAge");
     const gEl = document.getElementById("profileGender");
 
     if (hEl) hEl.textContent = profile.height || "--";
     if (aEl) aEl.textContent = profile.age || "--";
-    
+
     // Format Gender as M/F (first character uppercase)
     if (gEl) {
         let genderVal = (profile.gender || "--").trim();
@@ -663,7 +695,7 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
 
     let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
     // Sort chronological for export
-    exportData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(row => {
+    exportData.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(row => {
         csvContent += `${row.date},${row.status || "Done"},${row.type || row.workout || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
 
