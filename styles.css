@@ -707,6 +707,20 @@ tr.missed-workout:hover {
     color: var(--danger-color);
 }
 
+.status-badge.rest {
+    background: rgba(99, 102, 241, 0.15); 
+    color: #6366f1;
+}
+
+/* Row Highlights */
+tr.missed-workout {
+    background-color: rgba(237, 73, 86, 0.15) !important;
+}
+
+tr.rest-day {
+    background-color: rgba(99, 102, 241, 0.08) !important;
+}
+
 tr.missed-workout td {
     color: var(--danger-color);
     font-weight: 500;

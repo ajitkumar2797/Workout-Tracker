@@ -461,16 +461,25 @@ function renderTable() {
     displayData.forEach(row => {
         const tr = document.createElement("tr");
         const status = (row.status || "Done").toLowerCase();
+        
+        // Dynamic Row Highlighting
         if (status === "skipped") tr.classList.add("missed-workout");
+        if (status === "rest") tr.classList.add("rest-day");
 
         const displayStatus = (row.status || "Done").toUpperCase();
+        
+        // Process workout type string
+        let workoutDisp = "--";
+        if (status === 'done') workoutDisp = (row.type || row.workout || "--");
+        else if (status === 'rest') workoutDisp = "Rest Day 💤";
+        else workoutDisp = "Skipped ❌";
 
         tr.innerHTML = `
             <td>${row.date}</td>
-            <td><span class="status-badge ${status === 'done' ? 'done' : 'skipped'}">${displayStatus}</span></td>
-            <td>${status === 'done' ? (row.type || row.workout || "--") : "Skipped"}</td>
+            <td><span class="status-badge ${status}">${displayStatus}</span></td>
+            <td>${workoutDisp}</td>
             <td>${row.weight}</td>
-            <td>${formatTime12h(row.time)}</td>
+            <td>${status === 'done' ? formatTime12h(row.time) : "--:--"}</td>
             <td>${row.cheatMeal}</td>
         `;
         historyBody.appendChild(tr);
@@ -627,7 +636,9 @@ function renderChart() {
 // Optional Features
 // -----------------------------------------------------
 document.getElementById("logStatus").addEventListener("change", (e) => {
-    document.getElementById("workoutDetailsGroup").classList.toggle("hidden", e.target.value === "Skipped");
+    const val = e.target.value;
+    // Hide details if it's not a completed workout
+    document.getElementById("workoutDetailsGroup").classList.toggle("hidden", val === "Skipped" || val === "Rest");
 });
 
 document.getElementById("logCheat").addEventListener("change", (e) => {
