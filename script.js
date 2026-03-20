@@ -249,7 +249,14 @@ logForm.addEventListener("submit", async (e) => {
     const time = document.getElementById("logTime").value;
     const weight = parseFloat(document.getElementById("logWeight").value);
     const status = document.getElementById("logStatus").value;
-    const type = status === "Done" ? document.getElementById("logType").value : "Skipped";
+    
+    // Determine type string for database
+    let type = "Skipped";
+    if (status === "Done") {
+        type = document.getElementById("logType").value || "Workout";
+    } else if (status === "Rest") {
+        type = "Rest Day";
+    }
     const isCheat = document.getElementById("logCheat").checked;
     const cheat = isCheat ? (document.getElementById("logCheatText").value.trim() || "Yes") : "No";
 
@@ -509,10 +516,12 @@ function renderWorkoutStatsChart() {
     const filteredData = getFilteredData();
     if (filteredData.length === 0) return;
 
-    // Aggregate status and types
+    // Aggregate status and types (EXCLUDE Rest Days from workout distribution)
     const stats = {};
     filteredData.forEach(row => {
         const status = (row.status || "Done").toLowerCase();
+        if (status === "rest") return; // Skip rest days in Activity breakdown
+
         if (status === "skipped") {
             stats["Skipped"] = (stats["Skipped"] || 0) + 1;
         } else {
