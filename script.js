@@ -353,8 +353,45 @@ function formatTime12h(timeStr) {
 
 function renderTable() {
     historyBody.innerHTML = "";
-    // Display in reverse chronological order
-    const displayData = [...currentData].reverse();
+    
+    // Range preference from UI (Default 7 days)
+    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "7";
+    
+    // Get comparison date boundaries
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    
+    let filteredData = [...currentData];
+    
+    if (range !== "all") {
+        const threshold = new Date(todayStart);
+        if (range === "7") threshold.setDate(todayStart.getDate() - 7);
+        else if (range === "15") threshold.setDate(todayStart.getDate() - 15);
+        else if (range === "30") threshold.setMonth(todayStart.getMonth() - 1);
+        else if (range === "90") threshold.setMonth(todayStart.getMonth() - 3);
+        else if (range === "180") threshold.setMonth(todayStart.getMonth() - 6);
+        
+        threshold.setHours(0, 0, 0, 0);
+        
+        filteredData = currentData.filter(d => {
+            if (!d.date) return false;
+            // Robust parsing for YYYY-MM-DD
+            const [y, m, day] = d.date.split("-").map(Number);
+            const entryDate = new Date(y, m - 1, day);
+            
+            // Only show entries between [threshold, todayEnd]
+            return entryDate >= threshold && entryDate <= todayEnd;
+        });
+    }
+
+    // Sort: Newest first
+    const displayData = filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if (displayData.length === 0) {
+        historyBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No records found for selected period</td></tr>`;
+        return;
+    }
 
     displayData.forEach(row => {
         const tr = document.createElement("tr");
@@ -373,6 +410,12 @@ function renderTable() {
         `;
         historyBody.appendChild(tr);
     });
+}
+
+// Add history filter listener
+const historyRangeSelect = document.getElementById('historyRange');
+if (historyRangeSelect) {
+    historyRangeSelect.addEventListener('change', renderTable);
 }
 
 // -----------------------------------------------------
@@ -502,15 +545,40 @@ function calculateBMI() {
 document.getElementById("exportCsvBtn").addEventListener("click", () => {
     if (currentData.length === 0) return showToast("No data to export", true);
 
+    const range = document.getElementById("historyRange") ? document.getElementById("historyRange").value : "all";
+    const now = new Date();
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    
+    let exportData = [...currentData];
+    if (range !== "all") {
+        const threshold = new Date(todayStart);
+        if (range === "7") threshold.setDate(todayStart.getDate() - 7);
+        else if (range === "15") threshold.setDate(todayStart.getDate() - 15);
+        else if (range === "30") threshold.setMonth(todayStart.getMonth() - 1);
+        else if (range === "90") threshold.setMonth(todayStart.getMonth() - 3);
+        else if (range === "180") threshold.setMonth(todayStart.getMonth() - 6);
+        threshold.setHours(0, 0, 0, 0);
+
+        exportData = currentData.filter(d => {
+            if (!d.date) return false;
+            const [y, m, day] = d.date.split("-").map(Number);
+            const entryDate = new Date(y, m - 1, day);
+            return entryDate >= threshold && entryDate <= todayEnd;
+        });
+    }
+
+    if (exportData.length === 0) return showToast("No records to export in this range", true);
+
     let csvContent = "data:text/csv;charset=utf-8,Date,Status,Workout,Weight,Time,CheatMeal\n";
-    currentData.forEach(row => {
-        csvContent += `${row.date},${row.status || "Done"},${row.type || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
+    exportData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(row => {
+        csvContent += `${row.date},${row.status || "Done"},${row.type || row.workout || ""},${row.weight},${row.time || ""},${row.cheatMeal}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `workout_data_${currentUser}.csv`);
+    link.setAttribute("download", `workout_history_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

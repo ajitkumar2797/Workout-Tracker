@@ -461,11 +461,34 @@ input:focus {
 }
 
 /* Table */
+.history-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.history-controls label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.history-range-select {
+    padding: 0.4rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 0.75rem;
+    outline: none;
+    cursor: pointer;
+}
+
 .table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
 }
@@ -693,7 +716,16 @@ body.dark-mode tr:hover {
     .table-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.75rem;
+    }
+
+    .history-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .history-range-select {
+        flex: 1;
     }
 
     .chart-filters {
@@ -708,7 +740,16 @@ body.dark-mode tr:hover {
     }
 
     .btn-small {
-        width: 100%; /* Make Export CSV button full width on tiny mobile */
+        white-space: nowrap;
+    }
+
+    table {
+        min-width: 450px; /* Allow internal table scroll but keep card fitted */
+    }
+
+    th, td {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.75rem;
     }
 
     .glass-card {
