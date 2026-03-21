@@ -122,9 +122,9 @@ loginForm.addEventListener("submit", async (e) => {
     }
 });
 
-logoutBtn.addEventListener("click", performLogout);
+logoutBtn.addEventListener("click", () => performLogout(false));
 
-function performLogout() {
+function performLogout(isAuto = false) {
     currentUser = null;
     localStorage.removeItem("workout_user");
     currentData = [];
@@ -139,13 +139,18 @@ function performLogout() {
     // Clear timeout and listeners
     clearTimeout(inactivityTimeout);
     removeActivityListeners();
-    showToast("Session timed out due to Inactivity", true);
+
+    if (isAuto) {
+        showToast("Session timed out due to Inactivity", true);
+    } else {
+        showToast("Logged out successfully");
+    }
 }
 
 function resetInactivityTimer() {
     clearTimeout(inactivityTimeout);
     if (currentUser) {
-        inactivityTimeout = setTimeout(performLogout, TIMEOUT_DURATION);
+        inactivityTimeout = setTimeout(() => performLogout(true), TIMEOUT_DURATION);
     }
 }
 
@@ -249,7 +254,7 @@ logForm.addEventListener("submit", async (e) => {
     const time = document.getElementById("logTime").value;
     const weight = parseFloat(document.getElementById("logWeight").value);
     const status = document.getElementById("logStatus").value;
-    
+
     // Determine type string for database
     let type = "Skipped";
     if (status === "Done") {
@@ -469,13 +474,13 @@ function renderTable() {
     displayData.forEach(row => {
         const tr = document.createElement("tr");
         const status = (row.status || "Done").toLowerCase();
-        
+
         // Dynamic Row Highlighting
         if (status === "skipped") tr.classList.add("missed-workout");
         if (status === "rest") tr.classList.add("rest-day");
 
         const displayStatus = (row.status || "Done").toUpperCase();
-        
+
         // Process workout type string
         let workoutDisp = "--";
         if (status === 'done') workoutDisp = (row.type || row.workout || "--");
