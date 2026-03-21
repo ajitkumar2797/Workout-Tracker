@@ -90,41 +90,38 @@ function doGet(e) {
   }
 
   var data = sheet.getDataRange().getValues();
-  if (data.length < 2) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
   var headers = data[0];
   var result = [];
   
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if(row[0] == "") continue;
-    var obj = {};
-    for (var j = 0; j < headers.length; j++) {
-      var key = headers[j].toLowerCase();
-      if(key === "cheatmeal") key = "cheatMeal";
-      if(key === "date") {
-        try {
-          var d = new Date(row[j]);
-          // Adjust timezone offset to prevent date shifting
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          obj[key] = d.toISOString().split('T')[0];
-        } catch(err) { obj[key] = row[j]; }
-      } else if(key === "time") {
-        try {
-          var t = new Date(row[j]);
-          // Google Sheets often returns a date of 1899 for pure time values; we only care about the time part
-          obj[key] = Utilities.formatDate(t, Session.getScriptTimeZone(), "hh:mm a");
-        } catch(err) { obj[key] = row[j]; }
-      } else {
-        obj[key] = row[j];
+  if (data.length >= 2) {
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if(row[0] == "") continue; // Keep this line as it was not explicitly removed
+      var obj = {};
+      for (var j = 0; j < headers.length; j++) {
+        var key = headers[j].toLowerCase();
+        if(key === "cheatmeal") key = "cheatMeal";
+        if(key === "date") {
+          try {
+            var d = new Date(row[j]);
+            // Adjust timezone offset to prevent date shifting
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            obj[key] = d.toISOString().split('T')[0];
+          } catch(err) { obj[key] = row[j]; }
+        } else if(key === "time") {
+          try {
+            var t = new Date(row[j]);
+            // Google Sheets often returns a date of 1899 for pure time values; we only care about the time part
+            obj[key] = Utilities.formatDate(t, Session.getScriptTimeZone(), "hh:mm a");
+          } catch(err) { obj[key] = row[j]; }
+        } else {
+          obj[key] = row[j];
+        }
       }
+      // Maintain alignment with JS property names
+      if (obj.workout && !obj.type) obj.type = obj.workout;
+      result.push(obj);
     }
-    // Maintain alignment with JS property names
-    if (obj.workout && !obj.type) obj.type = obj.workout;
-    result.push(obj);
   }
 
   return ContentService.createTextOutput(JSON.stringify({
