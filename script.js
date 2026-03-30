@@ -399,18 +399,42 @@ function updateStats() {
 
     // Streak Calculation (includes both Workout days and Rest days)
     let streak = 0;
-    const consistentDates = [...new Set(currentData.filter(d => d.status === "Done" || d.status === "Rest").map(d => d.date))];
-    if (consistentDates.length > 0) {
-        consistentDates.sort((a, b) => new Date(a) - new Date(b));
-        streak = 1;
-        for (let i = consistentDates.length - 1; i > 0; i--) {
-            const curr = new Date(consistentDates[i]);
-            const prev = new Date(consistentDates[i - 1]);
-            const diffTime = Math.abs(curr - prev);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            // A streak continues if there is exactly 1 day difference between logs
-            if (diffDays === 1) streak++;
-            else break;
+    const dateConsistency = {};
+    currentData.forEach(d => {
+        if (!dateConsistency[d.date]) dateConsistency[d.date] = false;
+        // If any entry on that day was a success or rest, count the whole day as consistent
+        if (d.status === "Done" || d.status === "Rest") {
+            dateConsistency[d.date] = true;
+        }
+    });
+
+    const uniqueDates = Object.keys(dateConsistency).sort((a, b) => new Date(a) - new Date(b));
+
+    if (uniqueDates.length > 0) {
+        const lastDateStr = uniqueDates[uniqueDates.length - 1];
+        
+        // Calculate days since last log to ensure streak breaks on inactive days
+        const now = new Date();
+        const todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        const lastDateObj = new Date(lastDateStr);
+        const todayObj = new Date(todayStr);
+        const daysSinceLastLog = Math.floor((todayObj - lastDateObj) / (1000 * 60 * 60 * 24));
+
+        // Streak lives ONLY if the last logged date was consistent AND was logged either today or yesterday
+        if (dateConsistency[lastDateStr] && daysSinceLastLog <= 1) {
+            streak = 1;
+            for (let i = uniqueDates.length - 1; i > 0; i--) {
+                const curr = new Date(uniqueDates[i]);
+                const prev = new Date(uniqueDates[i - 1]);
+                const diffDays = Math.ceil(Math.abs(curr - prev) / (1000 * 60 * 60 * 24));
+                
+                // Keep counting if gap is exactly 1 day and that previous day was consistent
+                if (diffDays === 1 && dateConsistency[uniqueDates[i - 1]]) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
         }
     }
     document.getElementById("streakValue").textContent = streak;
