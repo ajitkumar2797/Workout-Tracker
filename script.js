@@ -899,6 +899,10 @@ function renderWorkouts() {
                     }
                     
                     // Build table for this grouping
+                    const tableWrapper = document.createElement("div");
+                    tableWrapper.style.overflowX = "auto";
+                    tableWrapper.style.width = "100%";
+
                     const table = document.createElement("table");
                     table.className = "module-table";
                     const thead = document.createElement("thead");
@@ -929,7 +933,8 @@ function renderWorkouts() {
                     });
                     
                     table.appendChild(tbody);
-                    card.appendChild(table);
+                    tableWrapper.appendChild(table);
+                    card.appendChild(tableWrapper);
                 });
             });
 
@@ -954,7 +959,7 @@ function renderDiet() {
     // Group by Meal Type
     const grouped = {};
     dietData.forEach(d => {
-        const m = d.mealType || "Other";
+        const m = d.mealtype || d.mealType || d.meal || "Other";
         if (!grouped[m]) grouped[m] = [];
         grouped[m].push(d);
     });
@@ -968,6 +973,10 @@ function renderDiet() {
             card.className = "diet-card glass-card";
             card.innerHTML = `<h4>${actualKey}</h4>`;
             
+            const tableWrapper = document.createElement("div");
+            tableWrapper.style.overflowX = "auto";
+            tableWrapper.style.width = "100%";
+
             const table = document.createElement("table");
             table.className = "module-table";
             table.innerHTML = `
@@ -975,17 +984,23 @@ function renderDiet() {
                     <tr><th>Food Item</th><th>Quantity</th><th>Notes</th></tr>
                 </thead>
                 <tbody>
-                    ${grouped[actualKey].map(item => `
+                    ${grouped[actualKey].map(item => {
+                        const foodItem = item.fooditem || item.foodItem || item.item || item.food || "Food Details";
+                        const qty = item.quantity || item.qty || "-";
+                        const nts = item.notes || item.note || "-";
+                        return `
                         <tr>
-                            <td><strong>${item.foodItem || "Food Details"}</strong></td>
-                            <td>${item.quantity || "-"}</td>
-                            <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">${item.notes || "-"}</td>
+                            <td><strong>${foodItem}</strong></td>
+                            <td>${qty}</td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">${nts}</td>
                         </tr>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </tbody>
             `;
             
-            card.appendChild(table);
+            tableWrapper.appendChild(table);
+            card.appendChild(tableWrapper);
             container.appendChild(card);
         }
     });
