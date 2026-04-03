@@ -127,7 +127,10 @@ function doGet(e) {
   var workoutsSheetName = user + "-workout";
   var workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(workoutsSheetName);
   var workoutsPlan = [];
-  if (workoutsSheet) {
+  if (!workoutsSheet) {
+    workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(workoutsSheetName);
+    workoutsSheet.appendRow(["DAY", "TYPE", "WORKOUT", "EXERCISE", "REPS", "SETS", "LINKS"]);
+  } else {
     var wData = workoutsSheet.getDataRange().getValues();
     if(wData.length >= 2) {
       var wHeaders = wData[0];
@@ -148,7 +151,10 @@ function doGet(e) {
   var dietSheetName = user + "-diet";
   var dietSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dietSheetName);
   var dietPlan = [];
-  if (dietSheet) {
+  if (!dietSheet) {
+    dietSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(dietSheetName);
+    dietSheet.appendRow(["MEALTYPE", "FOODITEM", "QUANTITY", "NOTES"]);
+  } else {
     var dData = dietSheet.getDataRange().getValues();
     if(dData.length >= 2) {
       var dHeaders = dData[0];

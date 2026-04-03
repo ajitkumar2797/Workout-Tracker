@@ -866,74 +866,73 @@ function renderWorkouts() {
         if (actualKey) {
             const card = document.createElement("div");
             card.className = "workout-card glass-card";
+            card.innerHTML = `<h4>${actualKey} Plan</h4>`;
             
-            // Build exercises HTML
-            let exercisesHtml = "";
-            let currentType = "";
-            let currentRound = "";
-            
+            // Group by TYPE (Gym, Functional, Cardio)
+            const typeGroups = {};
             grouped[actualKey].forEach(ex => {
-                const exType = ex.type || ex.workouttype || "";
-                const exRound = ex.workout || "Routine"; // Usually "Round 1", "Round 2" etc.
-                const exName = ex.exercise || ex.exercisename || ex.workout || "Activity";
-                const exLinks = ex.links || ex.link || "";
+                const typeStr = ex.type || ex.workouttype || "General Type";
+                if(!typeGroups[typeStr]) typeGroups[typeStr] = {};
                 
-                // Show workout type header if it changes (e.g. GYM vs Functional)
-                if (exType && String(exType).trim().toLowerCase() !== String(currentType).trim().toLowerCase()) {
-                    currentType = exType;
-                    exercisesHtml += `<div style="margin: 1.5rem 0 0.5rem 0; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 0.2rem;">${currentType}</div>`;
-                }
-
-                // Sub-header for Rounds if it changes
-                if (exRound && String(exRound).trim().toLowerCase() !== String(currentRound).trim().toLowerCase() && exRound !== exName) {
-                    currentRound = exRound;
-                    exercisesHtml += `<div style="margin: 0.8rem 0 0.4rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); opacity: 0.9;">🔥 ${currentRound}</div>`;
-                }
+                const roundStr = ex.workout || "Routine"; // "Round 1", etc
+                const exName = ex.exercise || ex.exercisename || "Activity";
+                const activeRound = (roundStr !== exName) ? roundStr : "Routine"; // Safety mapping
                 
-                // Youtube Button generator
-                let youtubeBtnHtml = "";
-                if (exLinks.includes("http")) {
-                    youtubeBtnHtml = `<a href="${exLinks}" target="_blank" style="margin-top: 0.5rem; display: inline-block; padding: 0.2rem 0.6rem; background: var(--danger-color); color: white; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 600;">▶️ Watch Video</a>`;
-                }
-
-                exercisesHtml += `
-                    <div class="exercise-item" style="border-left: 3px solid var(--primary-color); padding-left: 0.8rem;">
-                        <strong>${exName}</strong>
-                        <div class="meta" style="margin-top: 0.3rem;">
-                            ${ex.sets ? `<span style="margin-right: 10px;"><strong>Sets:</strong> ${ex.sets}</span>` : ''} 
-                            ${ex.reps ? `<span><strong>Reps/Time:</strong> ${ex.reps}</span>` : ''}
-                        </div>
-                        ${youtubeBtnHtml}
-                    </div>
-                `;
+                if(!typeGroups[typeStr][activeRound]) typeGroups[typeStr][activeRound] = [];
+                typeGroups[typeStr][activeRound].push(ex);
             });
 
-            card.innerHTML = `
-                <h4>${actualKey} Plan</h4>
-                ${exercisesHtml}
-            `;
-            container.appendChild(card);
-        }
-    });
+            // Render inner table layouts
+            Object.keys(typeGroups).forEach(typeName => {
+                const typeHeader = document.createElement("div");
+                typeHeader.className = "type-header";
+                typeHeader.textContent = typeName;
+                card.appendChild(typeHeader);
+                
+                Object.keys(typeGroups[typeName]).forEach(roundName => {
+                    // Sub-header for Rounds if it's explicitly named
+                    if (roundName && roundName !== "Routine" && roundName !== "Activity") {
+                        const roundHeader = document.createElement("div");
+                        roundHeader.className = "round-header";
+                        roundHeader.innerHTML = `🔥 ${roundName}`;
+                        card.appendChild(roundHeader);
+                    }
+                    
+                    // Build table for this grouping
+                    const table = document.createElement("table");
+                    table.className = "module-table";
+                    const thead = document.createElement("thead");
+                    thead.innerHTML = `<tr><th>Exercise</th><th>Reps/Time</th><th>Sets</th><th>Links</th></tr>`;
+                    table.appendChild(thead);
+                    
+                    const tbody = document.createElement("tbody");
+                    typeGroups[typeName][roundName].forEach(ex => {
+                        const exName = ex.exercise || ex.exercisename || ex.workout || "Activity";
+                        const exLinks = ex.links || ex.link || "";
+                        
+                        // Youtube Button generator
+                        let youtubeBtnHtml = "";
+                        if (exLinks.includes("http")) {
+                            youtubeBtnHtml = `<a href="${exLinks}" target="_blank" style="padding: 0.3rem 0.6rem; background: var(--danger-color); color: white; border-radius: 4px; text-decoration: none; font-size: 0.75rem; font-weight: 700; display: inline-block; white-space: nowrap;">▶️ Video</a>`;
+                        }
 
-    // Also render any keys that weren't in the standard order
-    Object.keys(grouped).forEach(k => {
-        if (!daysOrder.map(d=>d.toLowerCase()).includes(k.toLowerCase())) {
-            const card = document.createElement("div");
-            card.className = "workout-card glass-card";
-            let exercisesHtml = "";
-            grouped[k].forEach(ex => {
-                exercisesHtml += `
-                    <div class="exercise-item">
-                        <strong>${ex.exerciseName || "Exercise"}</strong>
-                        <div class="meta">
-                            ${ex.sets ? `<i class="fa fa-repeat"></i> Sets: ${ex.sets}` : ''} 
-                            ${ex.reps ? `| Reps: ${ex.reps}` : ''}
-                        </div>
-                    </div>
-                `;
+                        let notesHtml = ex.notes ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; font-style: italic;">* ${ex.notes}</div>` : "";
+                        
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td><strong>${exName}</strong>${notesHtml}</td>
+                            <td>${ex.reps || '-'}</td>
+                            <td>${ex.sets || '-'}</td>
+                            <td>${youtubeBtnHtml}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    
+                    table.appendChild(tbody);
+                    card.appendChild(table);
+                });
             });
-            card.innerHTML = `<h4>${k}</h4>${exercisesHtml}`;
+
             container.appendChild(card);
         }
     });
@@ -967,40 +966,26 @@ function renderDiet() {
         if (actualKey) {
             const card = document.createElement("div");
             card.className = "diet-card glass-card";
+            card.innerHTML = `<h4>${actualKey}</h4>`;
             
-            let itemsHtml = "";
-            grouped[actualKey].forEach(item => {
-                itemsHtml += `
-                    <div class="meal-item">
-                        <strong>${item.foodItem || "Food Details"}</strong>
-                        ${item.quantity ? `<div class="meta">Qty: ${item.quantity}</div>` : ""}
-                        ${item.notes ? `<div class="meta" style="margin-top:0.3rem; font-style: italic; color: var(--text-muted); font-size: 0.85rem;">${item.notes}</div>` : ""}
-                    </div>
-                `;
-            });
-
-            card.innerHTML = `
-                <h4>${actualKey}</h4>
-                ${itemsHtml}
+            const table = document.createElement("table");
+            table.className = "module-table";
+            table.innerHTML = `
+                <thead>
+                    <tr><th>Food Item</th><th>Quantity</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    ${grouped[actualKey].map(item => `
+                        <tr>
+                            <td><strong>${item.foodItem || "Food Details"}</strong></td>
+                            <td>${item.quantity || "-"}</td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">${item.notes || "-"}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
             `;
-            container.appendChild(card);
-        }
-    });
-
-    // Render unstandardized meals
-    Object.keys(grouped).forEach(k => {
-        if (!mealOrder.map(m=>m.toLowerCase()).includes(k.toLowerCase())) {
-            const card = document.createElement("div");
-            card.className = "diet-card glass-card";
-            let itemsHtml = "";
-            grouped[k].forEach(item => {
-                itemsHtml += `
-                    <div class="meal-item">
-                        <strong>${item.foodItem || "Food Details"}</strong>
-                    </div>
-                `;
-            });
-            card.innerHTML = `<h4>${k}</h4>${itemsHtml}`;
+            
+            card.appendChild(table);
             container.appendChild(card);
         }
     });

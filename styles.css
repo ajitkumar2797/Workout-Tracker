@@ -312,36 +312,82 @@ input:focus {
 }
 
 .modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
 }
 
 .workout-card h4, .diet-card h4 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: var(--primary-color);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
-.exercise-item, .meal-item {
+/* Professional Tables inside Modules */
+.module-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
     background: var(--toggle-bg);
-    padding: 1rem;
     border-radius: 8px;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
 }
 
-.exercise-item strong, .meal-item strong {
-    font-size: 1.1rem;
-    color: var(--text-main);
-}
-
-.exercise-item .meta, .meal-item .meta {
-    font-size: 0.9rem;
+.module-table th {
+    background: var(--surface-color);
     color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.module-table td {
+    padding: 0.8rem 1rem;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.module-table tr:last-child td {
+    border-bottom: none;
+}
+
+.module-table tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.dark-mode .module-table tr:hover {
+    background-color: rgba(255,255,255,0.03);
+}
+
+.type-header {
+    margin: 1.5rem 0 1rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--primary-color);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.round-header {
+    margin: 1.5rem 0 0.5rem 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.9;
 }
 
 .dashboard-top {
