@@ -47,6 +47,16 @@
 
     <!-- Main Dashboard Container -->
     <div id="dashboardContainer" class="dashboard-wrap hidden">
+        
+        <!-- Top Navigation -->
+        <nav class="app-nav glass-card">
+            <button class="nav-btn active" data-target="trackView">Track</button>
+            <button class="nav-btn" data-target="workoutsView">Workouts</button>
+            <button class="nav-btn" data-target="dietView">Diet</button>
+        </nav>
+
+        <!-- TRACK VIEW (Existing Dashboard) -->
+        <div id="trackView" class="tab-view active">
         <!-- Dashboard Header & Stats -->
         <section class="dashboard-top">
             <div class="plan-info glass-card">
@@ -234,6 +244,38 @@
                 </div>
             </main>
         </div>
+        </div> <!-- End Track View -->
+
+        <!-- WORKOUTS VIEW (New) -->
+        <div id="workoutsView" class="tab-view hidden">
+            <div class="view-header">
+                <h2>Your Weekly Workouts</h2>
+                <div class="day-filter" id="workoutDayFilter">
+                    <button class="btn btn-outline btn-small active" data-day="all">All</button>
+                    <button class="btn btn-outline btn-small" data-day="Monday">Mon</button>
+                    <button class="btn btn-outline btn-small" data-day="Tuesday">Tue</button>
+                    <button class="btn btn-outline btn-small" data-day="Wednesday">Wed</button>
+                    <button class="btn btn-outline btn-small" data-day="Thursday">Thu</button>
+                    <button class="btn btn-outline btn-small" data-day="Friday">Fri</button>
+                    <button class="btn btn-outline btn-small" data-day="Saturday">Sat</button>
+                    <button class="btn btn-outline btn-small" data-day="Sunday">Sun</button>
+                </div>
+            </div>
+            <div id="workoutsContainer" class="modules-grid">
+                <!-- Dynamically populated workouts -->
+            </div>
+        </div> <!-- End Workouts View -->
+
+        <!-- DIET VIEW (New) -->
+        <div id="dietView" class="tab-view hidden">
+            <div class="view-header">
+                <h2>Your Daily Diet Plan</h2>
+            </div>
+            <div id="dietContainer" class="modules-grid">
+                <!-- Dynamically populated diet plan -->
+            </div>
+        </div> <!-- End Diet View -->
+
     </div>
 
     <!-- Loading Overlay -->

@@ -9,6 +9,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyOzzGfT37V1oRmhPoDbQtb
 
 let currentUser = localStorage.getItem("workout_user") || null;
 let currentData = [];
+let workoutsData = [];
+let dietData = [];
 let chartInstance = null;
 let workoutStatsChartInstance = null;
 let inactivityTimeout;
@@ -233,6 +235,10 @@ async function fetchData() {
                     localStorage.setItem("workout_theme_colors", JSON.stringify(json.theme));
                     window.applyTheme(json.theme);
                 }
+
+                // Process new modules
+                workoutsData = json.workoutsPlan || [];
+                dietData = json.dietPlan || [];
             } else {
                 throw new Error("Failed to fetch");
             }
@@ -324,6 +330,10 @@ function updateUI() {
     renderTable();
     renderChart();
     renderWorkoutStatsChart();
+    
+    // Render multi-page modules
+    renderWorkouts();
+    renderDiet();
 }
 
 /**
@@ -757,3 +767,208 @@ document.getElementById("exportCsvBtn").addEventListener("click", () => {
     link.click();
     document.body.removeChild(link);
 });
+
+// -----------------------------------------------------
+// Multi-Page Navigation Logic
+// -----------------------------------------------------
+const navButtons = document.querySelectorAll(".nav-btn");
+const tabViews = document.querySelectorAll(".tab-view");
+
+navButtons.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        // Remove active state from all buttons & views
+        navButtons.forEach(b => b.classList.remove("active"));
+        tabViews.forEach(v => {
+            v.classList.remove("active");
+            v.classList.add("hidden");
+        });
+
+        // Add active state to clicked button
+        const targetId = e.target.getAttribute("data-target");
+        e.target.classList.add("active");
+
+        // Show target view
+        const targetView = document.getElementById(targetId);
+        if (targetView) {
+            targetView.classList.remove("hidden");
+            targetView.classList.add("active");
+        }
+        
+        // Ensure interactivity counters are reset
+        resetInactivityTimer();
+    });
+});
+
+// -----------------------------------------------------
+// Workouts Module
+// -----------------------------------------------------
+let activeWorkoutDay = "all";
+const workoutFilterBtns = document.querySelectorAll("#workoutDayFilter .btn");
+
+workoutFilterBtns.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        workoutFilterBtns.forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        activeWorkoutDay = e.target.getAttribute("data-day");
+        renderWorkouts();
+    });
+});
+
+function renderWorkouts() {
+    const container = document.getElementById("workoutsContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!workoutsData || workoutsData.length === 0) {
+        container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center;"><p>No workouts found ! Ask Ajit to add to your plan.</p></div>`;
+        return;
+    }
+
+    // Filter by day
+    let filtered = workoutsData;
+    if (activeWorkoutDay !== "all") {
+        filtered = workoutsData.filter(w => String(w.day).toLowerCase().trim() === String(activeWorkoutDay).toLowerCase().trim());
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center;"><p>Rest Day 💤</p></div>`;
+        return;
+    }
+
+    // Group by Day (even if filtered)
+    const grouped = {};
+    filtered.forEach(w => {
+        const d = w.day || "General";
+        if (!grouped[d]) grouped[d] = [];
+        grouped[d].push(w);
+    });
+
+    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "General"];
+
+    daysOrder.forEach(day => {
+        // Try fallback if case mismatch
+        const actualKey = Object.keys(grouped).find(k => k.toLowerCase() === day.toLowerCase());
+        if (actualKey) {
+            const card = document.createElement("div");
+            card.className = "workout-card glass-card";
+            
+            // Build exercises HTML
+            let exercisesHtml = "";
+            let currentType = "";
+            
+            grouped[actualKey].forEach(ex => {
+                // Show workout type header if it changes
+                if (ex.workoutType && String(ex.workoutType).trim().toLowerCase() !== String(currentType).trim().toLowerCase()) {
+                    currentType = ex.workoutType;
+                    exercisesHtml += `<div style="margin: 1rem 0 0.5rem 0; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-color); opacity: 0.8;">${currentType}</div>`;
+                }
+                
+                exercisesHtml += `
+                    <div class="exercise-item">
+                        <strong>${ex.exerciseName || "Exercise"}</strong>
+                        <div class="meta">
+                            ${ex.sets ? `<i class="fa fa-repeat"></i> Sets: ${ex.sets}` : ''} 
+                            ${ex.reps ? `| Reps: ${ex.reps}` : ''}
+                        </div>
+                        ${ex.notes ? `<div class="meta" style="margin-top:0.2rem; font-style: italic;">${ex.notes}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <h4>${actualKey} Plan</h4>
+                ${exercisesHtml}
+            `;
+            container.appendChild(card);
+        }
+    });
+
+    // Also render any keys that weren't in the standard order
+    Object.keys(grouped).forEach(k => {
+        if (!daysOrder.map(d=>d.toLowerCase()).includes(k.toLowerCase())) {
+            const card = document.createElement("div");
+            card.className = "workout-card glass-card";
+            let exercisesHtml = "";
+            grouped[k].forEach(ex => {
+                exercisesHtml += `
+                    <div class="exercise-item">
+                        <strong>${ex.exerciseName || "Exercise"}</strong>
+                        <div class="meta">
+                            ${ex.sets ? `<i class="fa fa-repeat"></i> Sets: ${ex.sets}` : ''} 
+                            ${ex.reps ? `| Reps: ${ex.reps}` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            card.innerHTML = `<h4>${k}</h4>${exercisesHtml}`;
+            container.appendChild(card);
+        }
+    });
+}
+
+// -----------------------------------------------------
+// Diet Module
+// -----------------------------------------------------
+function renderDiet() {
+    const container = document.getElementById("dietContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!dietData || dietData.length === 0) {
+        container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center;"><p>No diet plan configured.</p></div>`;
+        return;
+    }
+
+    // Group by Meal Type
+    const grouped = {};
+    dietData.forEach(d => {
+        const m = d.mealType || "Other";
+        if (!grouped[m]) grouped[m] = [];
+        grouped[m].push(d);
+    });
+
+    const mealOrder = ["Breakfast", "Mid-Morning", "Lunch", "Snacks", "Evening", "Dinner", "Other"];
+
+    mealOrder.forEach(meal => {
+        const actualKey = Object.keys(grouped).find(k => k.toLowerCase() === meal.toLowerCase());
+        if (actualKey) {
+            const card = document.createElement("div");
+            card.className = "diet-card glass-card";
+            
+            let itemsHtml = "";
+            grouped[actualKey].forEach(item => {
+                itemsHtml += `
+                    <div class="meal-item">
+                        <strong>${item.foodItem || "Food Details"}</strong>
+                        ${item.quantity ? `<div class="meta">Qty: ${item.quantity}</div>` : ""}
+                        ${item.notes ? `<div class="meta" style="margin-top:0.3rem; font-style: italic; color: var(--text-muted); font-size: 0.85rem;">${item.notes}</div>` : ""}
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <h4>${actualKey}</h4>
+                ${itemsHtml}
+            `;
+            container.appendChild(card);
+        }
+    });
+
+    // Render unstandardized meals
+    Object.keys(grouped).forEach(k => {
+        if (!mealOrder.map(m=>m.toLowerCase()).includes(k.toLowerCase())) {
+            const card = document.createElement("div");
+            card.className = "diet-card glass-card";
+            let itemsHtml = "";
+            grouped[k].forEach(item => {
+                itemsHtml += `
+                    <div class="meal-item">
+                        <strong>${item.foodItem || "Food Details"}</strong>
+                    </div>
+                `;
+            });
+            card.innerHTML = `<h4>${k}</h4>${itemsHtml}`;
+            container.appendChild(card);
+        }
+    });
+}

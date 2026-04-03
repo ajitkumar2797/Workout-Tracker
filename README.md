@@ -123,12 +123,57 @@ function doGet(e) {
       result.push(obj);
     }
   }
+  // Retrieve Workouts Plan
+  var workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("workouts");
+  var workoutsPlan = [];
+  if (!workoutsSheet) {
+    workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("workouts");
+    workoutsSheet.appendRow(["username", "day", "workoutType", "exerciseName", "sets", "reps", "notes"]);
+  } else {
+    var wData = workoutsSheet.getDataRange().getValues();
+    if(wData.length >= 2) {
+      var wHeaders = wData[0];
+      for(var i = 1; i < wData.length; i++) {
+        if(String(wData[i][0]).toLowerCase() === String(user).toLowerCase()) {
+          var obj = {};
+          for(var j = 1; j < wHeaders.length; j++) {
+            obj[wHeaders[j]] = wData[i][j];
+          }
+          workoutsPlan.push(obj);
+        }
+      }
+    }
+  }
+
+  // Retrieve Diet Plan
+  var dietSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("diet");
+  var dietPlan = [];
+  if (!dietSheet) {
+    dietSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("diet");
+    dietSheet.appendRow(["username", "mealType", "foodItem", "quantity", "notes"]);
+  } else {
+    var dData = dietSheet.getDataRange().getValues();
+    if(dData.length >= 2) {
+      var dHeaders = dData[0];
+      for(var i = 1; i < dData.length; i++) {
+        if(String(dData[i][0]).toLowerCase() === String(user).toLowerCase()) {
+          var obj = {};
+          for(var j = 1; j < dHeaders.length; j++) {
+            obj[dHeaders[j]] = dData[i][j];
+          }
+          dietPlan.push(obj);
+        }
+      }
+    }
+  }
 
   return ContentService.createTextOutput(JSON.stringify({
     status: "success",
     data: result,
     workoutTypes: workoutTypes,
-    theme: theme
+    theme: theme,
+    workoutsPlan: workoutsPlan,
+    dietPlan: dietPlan
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
