@@ -132,6 +132,21 @@ function performLogout(isAuto = false) {
     currentData = [];
     loginContainer.classList.remove("hidden");
     dashboardContainer.classList.add("hidden");
+    
+    // Reset Navigation
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-view").forEach(v => {
+        v.classList.remove("active");
+        v.classList.add("hidden");
+    });
+    const trackBtn = document.querySelector('.nav-btn[data-target="trackView"]');
+    const trackView = document.getElementById("trackView");
+    if (trackBtn) trackBtn.classList.add("active");
+    if (trackView) {
+        trackView.classList.remove("hidden");
+        trackView.classList.add("active");
+    }
+
     logoutBtn.classList.add("hidden");
     const welcome = document.getElementById("welcomeMessage");
     if (welcome) welcome.classList.add("hidden");
@@ -802,17 +817,17 @@ navButtons.forEach(btn => {
 // -----------------------------------------------------
 // Workouts Module
 // -----------------------------------------------------
-let activeWorkoutDay = "all";
-const workoutFilterBtns = document.querySelectorAll("#workoutDayFilter .btn");
+const dayNamesGlobal = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+let activeWorkoutDay = dayNamesGlobal[new Date().getDay()]; // Default to TODAY
 
-workoutFilterBtns.forEach(btn => {
-    btn.addEventListener("click", (e) => {
-        workoutFilterBtns.forEach(b => b.classList.remove("active"));
-        e.target.classList.add("active");
-        activeWorkoutDay = e.target.getAttribute("data-day");
+const workoutSelect = document.getElementById("workoutDaySelect");
+if (workoutSelect) {
+    workoutSelect.value = activeWorkoutDay;
+    workoutSelect.addEventListener("change", (e) => {
+        activeWorkoutDay = e.target.value;
         renderWorkouts();
     });
-});
+}
 
 function renderWorkouts() {
     const container = document.getElementById("workoutsContainer");
@@ -855,22 +870,40 @@ function renderWorkouts() {
             // Build exercises HTML
             let exercisesHtml = "";
             let currentType = "";
+            let currentRound = "";
             
             grouped[actualKey].forEach(ex => {
-                // Show workout type header if it changes
-                if (ex.workoutType && String(ex.workoutType).trim().toLowerCase() !== String(currentType).trim().toLowerCase()) {
-                    currentType = ex.workoutType;
-                    exercisesHtml += `<div style="margin: 1rem 0 0.5rem 0; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-color); opacity: 0.8;">${currentType}</div>`;
+                const exType = ex.type || ex.workouttype || "";
+                const exRound = ex.workout || "Routine"; // Usually "Round 1", "Round 2" etc.
+                const exName = ex.exercise || ex.exercisename || ex.workout || "Activity";
+                const exLinks = ex.links || ex.link || "";
+                
+                // Show workout type header if it changes (e.g. GYM vs Functional)
+                if (exType && String(exType).trim().toLowerCase() !== String(currentType).trim().toLowerCase()) {
+                    currentType = exType;
+                    exercisesHtml += `<div style="margin: 1.5rem 0 0.5rem 0; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 0.2rem;">${currentType}</div>`;
+                }
+
+                // Sub-header for Rounds if it changes
+                if (exRound && String(exRound).trim().toLowerCase() !== String(currentRound).trim().toLowerCase() && exRound !== exName) {
+                    currentRound = exRound;
+                    exercisesHtml += `<div style="margin: 0.8rem 0 0.4rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); opacity: 0.9;">🔥 ${currentRound}</div>`;
                 }
                 
+                // Youtube Button generator
+                let youtubeBtnHtml = "";
+                if (exLinks.includes("http")) {
+                    youtubeBtnHtml = `<a href="${exLinks}" target="_blank" style="margin-top: 0.5rem; display: inline-block; padding: 0.2rem 0.6rem; background: var(--danger-color); color: white; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: 600;">▶️ Watch Video</a>`;
+                }
+
                 exercisesHtml += `
-                    <div class="exercise-item">
-                        <strong>${ex.exerciseName || "Exercise"}</strong>
-                        <div class="meta">
-                            ${ex.sets ? `<i class="fa fa-repeat"></i> Sets: ${ex.sets}` : ''} 
-                            ${ex.reps ? `| Reps: ${ex.reps}` : ''}
+                    <div class="exercise-item" style="border-left: 3px solid var(--primary-color); padding-left: 0.8rem;">
+                        <strong>${exName}</strong>
+                        <div class="meta" style="margin-top: 0.3rem;">
+                            ${ex.sets ? `<span style="margin-right: 10px;"><strong>Sets:</strong> ${ex.sets}</span>` : ''} 
+                            ${ex.reps ? `<span><strong>Reps/Time:</strong> ${ex.reps}</span>` : ''}
                         </div>
-                        ${ex.notes ? `<div class="meta" style="margin-top:0.2rem; font-style: italic;">${ex.notes}</div>` : ''}
+                        ${youtubeBtnHtml}
                     </div>
                 `;
             });

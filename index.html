@@ -251,14 +251,16 @@
             <div class="view-header">
                 <h2>Your Weekly Workouts</h2>
                 <div class="day-filter" id="workoutDayFilter">
-                    <button class="btn btn-outline btn-small active" data-day="all">All</button>
-                    <button class="btn btn-outline btn-small" data-day="Monday">Mon</button>
-                    <button class="btn btn-outline btn-small" data-day="Tuesday">Tue</button>
-                    <button class="btn btn-outline btn-small" data-day="Wednesday">Wed</button>
-                    <button class="btn btn-outline btn-small" data-day="Thursday">Thu</button>
-                    <button class="btn btn-outline btn-small" data-day="Friday">Fri</button>
-                    <button class="btn btn-outline btn-small" data-day="Saturday">Sat</button>
-                    <button class="btn btn-outline btn-small" data-day="Sunday">Sun</button>
+                    <select id="workoutDaySelect">
+                        <option value="all">All Days</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
                 </div>
             </div>
             <div id="workoutsContainer" class="modules-grid">

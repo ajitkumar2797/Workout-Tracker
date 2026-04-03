@@ -124,45 +124,43 @@ function doGet(e) {
     }
   }
   // Retrieve Workouts Plan
-  var workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("workouts");
+  var workoutsSheetName = user + "-workout";
+  var workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(workoutsSheetName);
   var workoutsPlan = [];
-  if (!workoutsSheet) {
-    workoutsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("workouts");
-    workoutsSheet.appendRow(["username", "day", "workoutType", "exerciseName", "sets", "reps", "notes"]);
-  } else {
+  if (workoutsSheet) {
     var wData = workoutsSheet.getDataRange().getValues();
     if(wData.length >= 2) {
       var wHeaders = wData[0];
       for(var i = 1; i < wData.length; i++) {
-        if(String(wData[i][0]).toLowerCase() === String(user).toLowerCase()) {
-          var obj = {};
-          for(var j = 1; j < wHeaders.length; j++) {
-            obj[wHeaders[j]] = wData[i][j];
+        var obj = {};
+        for(var j = 0; j < wHeaders.length; j++) {
+          var key = String(wHeaders[j]).toLowerCase().trim();
+          if (key) {
+             obj[key] = wData[i][j];
           }
-          workoutsPlan.push(obj);
         }
+        workoutsPlan.push(obj);
       }
     }
   }
 
   // Retrieve Diet Plan
-  var dietSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("diet");
+  var dietSheetName = user + "-diet";
+  var dietSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dietSheetName);
   var dietPlan = [];
-  if (!dietSheet) {
-    dietSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("diet");
-    dietSheet.appendRow(["username", "mealType", "foodItem", "quantity", "notes"]);
-  } else {
+  if (dietSheet) {
     var dData = dietSheet.getDataRange().getValues();
     if(dData.length >= 2) {
       var dHeaders = dData[0];
       for(var i = 1; i < dData.length; i++) {
-        if(String(dData[i][0]).toLowerCase() === String(user).toLowerCase()) {
-          var obj = {};
-          for(var j = 1; j < dHeaders.length; j++) {
-            obj[dHeaders[j]] = dData[i][j];
+        var obj = {};
+        for(var j = 0; j < dHeaders.length; j++) {
+          var key = String(dHeaders[j]).toLowerCase().trim();
+          if (key) {
+             obj[key] = dData[i][j];
           }
-          dietPlan.push(obj);
         }
+        dietPlan.push(obj);
       }
     }
   }
