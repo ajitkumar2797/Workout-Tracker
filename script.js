@@ -864,14 +864,10 @@ function renderWorkouts() {
         // Try fallback if case mismatch
         const actualKey = Object.keys(grouped).find(k => k.toLowerCase() === day.toLowerCase());
         if (actualKey) {
-            const card = document.createElement("div");
-            card.className = "workout-card glass-card";
-            card.innerHTML = `<h4>${actualKey} Plan</h4>`;
-            
             // Group by TYPE (Gym, Functional, Cardio)
             const typeGroups = {};
             grouped[actualKey].forEach(ex => {
-                const typeStr = ex.type || ex.workouttype || "General Type";
+                const typeStr = ex.type || ex.workouttype || "General";
                 if(!typeGroups[typeStr]) typeGroups[typeStr] = {};
                 
                 const roundStr = ex.workout || "Routine"; // "Round 1", etc
@@ -884,10 +880,9 @@ function renderWorkouts() {
 
             // Render inner table layouts
             Object.keys(typeGroups).forEach(typeName => {
-                const typeHeader = document.createElement("div");
-                typeHeader.className = "type-header";
-                typeHeader.textContent = typeName;
-                card.appendChild(typeHeader);
+                const card = document.createElement("div");
+                card.className = "workout-card glass-card";
+                card.innerHTML = `<h4>${actualKey} - ${typeName}</h4>`;
                 
                 Object.keys(typeGroups[typeName]).forEach(roundName => {
                     // Sub-header for Rounds if it's explicitly named
@@ -936,9 +931,9 @@ function renderWorkouts() {
                     tableWrapper.appendChild(table);
                     card.appendChild(tableWrapper);
                 });
+                
+                container.appendChild(card);
             });
-
-            container.appendChild(card);
         }
     });
 }
@@ -981,18 +976,26 @@ function renderDiet() {
             table.className = "module-table";
             table.innerHTML = `
                 <thead>
-                    <tr><th>Food Item</th><th>Quantity</th><th>Notes</th></tr>
+                    <tr><th>Food Item</th><th>Quantity</th><th>Notes</th><th>Links</th></tr>
                 </thead>
                 <tbody>
                     ${grouped[actualKey].map(item => {
                         const foodItem = item.fooditem || item.foodItem || item.item || item.food || "Food Details";
                         const qty = item.quantity || item.qty || "-";
                         const nts = item.notes || item.note || "-";
+                        const dLinks = item.links || item.link || "";
+                        
+                        let youtubeBtnHtml = "";
+                        if (dLinks.includes("http")) {
+                            youtubeBtnHtml = `<a href="${dLinks}" target="_blank" style="padding: 0.3rem 0.6rem; background: var(--danger-color); color: white; border-radius: 4px; text-decoration: none; font-size: 0.75rem; font-weight: 700; display: inline-block; white-space: nowrap;">▶️ Recipe / Video</a>`;
+                        }
+
                         return `
                         <tr>
                             <td><strong>${foodItem}</strong></td>
                             <td>${qty}</td>
                             <td style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">${nts}</td>
+                            <td>${youtubeBtnHtml}</td>
                         </tr>
                         `;
                     }).join('')}

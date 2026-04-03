@@ -153,7 +153,7 @@ function doGet(e) {
   var dietPlan = [];
   if (!dietSheet) {
     dietSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(dietSheetName);
-    dietSheet.appendRow(["MEALTYPE", "FOODITEM", "QUANTITY", "NOTES"]);
+    dietSheet.appendRow(["MEALTYPE", "FOODITEM", "QUANTITY", "NOTES", "LINKS"]);
   } else {
     var dData = dietSheet.getDataRange().getValues();
     if(dData.length >= 2) {
