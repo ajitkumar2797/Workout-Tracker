@@ -659,9 +659,29 @@ function renderChart() {
     const filteredData = getFilteredData();
     if (filteredData.length === 0) return;
 
-    // Use current range from filtered data
-    const labels = filteredData.map(d => d.date);
-    const dataPoints = filteredData.map(d => d.weight);
+    // The user requested that if multiple weights are logged on the same date, 
+    // the graph should strictly only plot the lowest recorded weight for that day.
+    const dailyMinWeights = {};
+    const uniqueDates = [];
+    
+    filteredData.forEach(d => {
+        if (!d.weight) return;
+        const w = parseFloat(d.weight);
+        if (isNaN(w)) return;
+        
+        // Track unique dates while maintaining existing chronological order
+        if (!uniqueDates.includes(d.date)) {
+            uniqueDates.push(d.date);
+        }
+        
+        // Push lowest weight
+        if (!dailyMinWeights[d.date] || w < dailyMinWeights[d.date]) {
+            dailyMinWeights[d.date] = w;
+        }
+    });
+
+    const labels = uniqueDates;
+    const dataPoints = uniqueDates.map(date => dailyMinWeights[date]);
 
     chartInstance = new Chart(ctx, {
         type: 'line',
