@@ -920,6 +920,15 @@ function renderWorkouts() {
 
                     const table = document.createElement("table");
                     table.className = "module-table";
+                    const colgroup = document.createElement("colgroup");
+                    colgroup.innerHTML = `
+                        <col style="width: 45%;">
+                        <col style="width: 20%;">
+                        <col style="width: 15%;">
+                        <col style="width: 20%;">
+                    `;
+                    table.appendChild(colgroup);
+
                     const thead = document.createElement("thead");
                     thead.innerHTML = `<tr><th>Exercise</th><th>Reps/Time</th><th>Sets</th><th>Links</th></tr>`;
                     table.appendChild(thead);
@@ -995,6 +1004,12 @@ function renderDiet() {
             const table = document.createElement("table");
             table.className = "module-table";
             table.innerHTML = `
+                <colgroup>
+                    <col style="width: 35%;">
+                    <col style="width: 15%;">
+                    <col style="width: 30%;">
+                    <col style="width: 20%;">
+                </colgroup>
                 <thead>
                     <tr><th>Food Item</th><th>Quantity</th><th>Notes</th><th>Links</th></tr>
                 </thead>
