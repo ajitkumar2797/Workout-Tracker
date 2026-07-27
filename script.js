@@ -7,14 +7,17 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyOzzGfT37V1oRmhPoDbQtb
 
 // Authentication is securely handled backend via Google Sheets 'Credentials' tab.
 
-let currentUser = localStorage.getItem("workout_user") || null;
+let currentUser = localStorage.getItem("workout_user") || sessionStorage.getItem("workout_user") || null;
 let currentData = [];
 let workoutsData = [];
 let dietData = [];
 let chartInstance = null;
 let workoutStatsChartInstance = null;
 let inactivityTimeout;
-const TIMEOUT_DURATION = 60000; // 60 Seconds
+
+// Dynamic Session Timeout Duration: 7 days if "Remember Login" was checked, else 10 minutes
+const isRemembered = localStorage.getItem("workout_remember") === "true";
+let TIMEOUT_DURATION = isRemembered ? (7 * 24 * 60 * 60 * 1000) : (10 * 60 * 1000);
 
 // DOM Elements
 const body = document.body;
@@ -84,7 +87,16 @@ loginForm.addEventListener("submit", async (e) => {
         // Safe Offline Fallback Debugging
         if (inputUser.toLowerCase() === "demo" && pin === "1234") {
             currentUser = "Demo";
-            localStorage.setItem("workout_user", "Demo");
+            const rememberMeChecked = document.getElementById("rememberMe").checked;
+            if (rememberMeChecked) {
+                localStorage.setItem("workout_user", "Demo");
+                localStorage.setItem("workout_remember", "true");
+                TIMEOUT_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+            } else {
+                sessionStorage.setItem("workout_user", "Demo");
+                localStorage.setItem("workout_remember", "false");
+                TIMEOUT_DURATION = 10 * 60 * 1000; // 10 minutes
+            }
             showDashboard("Demo");
         } else {
             err.textContent = "Offline Mode: use 'Demo' and '1234' to test locally.";
@@ -105,7 +117,17 @@ loginForm.addEventListener("submit", async (e) => {
             err.textContent = "";
             const realUser = json.realUser;
             currentUser = realUser;
-            localStorage.setItem("workout_user", realUser);
+            
+            const rememberMeChecked = document.getElementById("rememberMe").checked;
+            if (rememberMeChecked) {
+                localStorage.setItem("workout_user", realUser);
+                localStorage.setItem("workout_remember", "true");
+                TIMEOUT_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+            } else {
+                sessionStorage.setItem("workout_user", realUser);
+                localStorage.setItem("workout_remember", "false");
+                TIMEOUT_DURATION = 10 * 60 * 1000; // 10 minutes
+            }
 
             // Save profile details if returned from backend
             if (json.profile) {
@@ -129,6 +151,8 @@ logoutBtn.addEventListener("click", () => performLogout(false));
 function performLogout(isAuto = false) {
     currentUser = null;
     localStorage.removeItem("workout_user");
+    sessionStorage.removeItem("workout_user");
+    localStorage.removeItem("workout_remember");
     currentData = [];
     loginContainer.classList.remove("hidden");
     dashboardContainer.classList.add("hidden");
